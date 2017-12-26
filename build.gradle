@@ -1,0 +1,25 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+version = 0.1
+sourceCompatibility = 1.9
+
+repositories {
+    jcenter()
+}
+
+mainClassName = "com.mkaminski.stemmer.KaminskiStemmerRunner"
+
+jar {
+    manifest {
+        attributes("Implementation-Vendor": "Mateusz Kamiński",
+        "Implementation-Version": 1.0,
+        "Created-By": "Mateusz Kamiński",
+        'Main-Class': 'com.mkaminski.stemmer.KaminskiStemmerRunner')
+    }
+}
+
+dependencies {
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
+    compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
+}
