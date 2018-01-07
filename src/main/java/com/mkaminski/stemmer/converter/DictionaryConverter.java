@@ -1,5 +1,6 @@
 package com.mkaminski.stemmer.converter;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 
@@ -10,5 +11,5 @@ import java.io.Serializable;
  */
 public interface DictionaryConverter {
 
-    Serializable convert(InputStreamReader inputStreamReader);
+    Serializable convert(InputStreamReader inputStreamReader) throws IOException;
 }

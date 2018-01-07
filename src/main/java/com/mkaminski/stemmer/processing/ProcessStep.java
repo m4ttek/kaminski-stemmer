@@ -1,5 +1,6 @@
 package com.mkaminski.stemmer.processing;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -7,7 +8,7 @@ import java.util.List;
  */
 public interface ProcessStep {
 
-    void makeProcess(ProcessingContext processingContext);
+    void makeProcess(ProcessingContext processingContext) throws IOException;
 
     default List<String> inCommands() {
         return List.of("stem", "convert");

@@ -2,7 +2,8 @@ apply plugin: 'java'
 apply plugin: 'application'
 
 version = 0.1
-sourceCompatibility = 1.9
+sourceCompatibility = 9
+targetCompatibility = 9
 
 repositories {
     jcenter()

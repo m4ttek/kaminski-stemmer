@@ -12,15 +12,14 @@ import com.mkaminski.stemmer.converter.TabToSerializedConverter;
 public class DictionaryConvertStep implements ProcessStep {
 
     @Override
-    public void makeProcess(ProcessingContext processingContext) {
+    public void makeProcess(ProcessingContext processingContext) throws IOException {
         InputStream source = processingContext.getSource();
         try (InputStreamReader inputStreamReader = new InputStreamReader(source)) {
             Serializable convertedDict = new TabToSerializedConverter().convert(inputStreamReader);
-            final ObjectOutputStream objectOutputStream = new ObjectOutputStream(processingContext.getDest());
+
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(processingContext.getDest());
             objectOutputStream.writeObject(convertedDict);
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            throw new RuntimeException(e);
+
         }
     }
 

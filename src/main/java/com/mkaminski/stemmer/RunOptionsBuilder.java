@@ -28,6 +28,10 @@ public class RunOptionsBuilder {
         return this;
     }
 
+    public String getMainCommand() {
+        return mainCommand;
+    }
+
     public RunOptions createRunOptions() {
         return new RunOptions(mainCommand, sourcePath, resultPath, dictPath);
     }

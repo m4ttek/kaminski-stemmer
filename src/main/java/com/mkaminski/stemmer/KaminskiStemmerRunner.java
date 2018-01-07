@@ -1,5 +1,6 @@
 package com.mkaminski.stemmer;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.mkaminski.stemmer.processing.DictionaryConvertStep;
@@ -42,7 +43,13 @@ public class KaminskiStemmerRunner {
         processStepList
                 .stream()
                 .filter(processStep -> processStep.inCommands().contains(runOptions.getMainCommand()))
-                .forEach(processStep -> processStep.makeProcess(processingContext));
+                .forEach(processStep -> {
+                    try {
+                        processStep.makeProcess(processingContext);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
     }
 
     public static void main(String[] args) {

@@ -3,6 +3,7 @@ package com.mkaminski.stemmer;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiFunction;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -12,44 +13,49 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 /**
+ * Gets and converts options from the application user.
+ *
  * @author Mateusz Kamiński
  */
 public class OptionsGetter {
 
     enum OptionCommand {
-        CONVERT_COMMAND(Option.builder().argName("convert").desc("converts a dictionary to the internal representation").build()) {
+        CONVERT_COMMAND(Option.builder().longOpt("convert").desc("converts a dictionary to the internal representation").build()) {
             @Override
             public RunOptionsBuilder setValue(RunOptionsBuilder runOptionsBuilder, CommandLine commandLine) {
-                if ("convert".equals(commandLine.getOptionValue("convert"))) {
+                if (commandLine.hasOption("convert")) {
                     runOptionsBuilder.setMainCommand("convert");
                 }
                 return runOptionsBuilder;
             }
         },
-        STEM_COMMAND(Option.builder().argName("stem").desc("stems document").build()) {
+        STEM_COMMAND(Option.builder().longOpt("stem").desc("stems document").build()) {
             @Override
             public RunOptionsBuilder setValue(RunOptionsBuilder runOptionsBuilder, CommandLine commandLine) {
-                if ("stem".equals(commandLine.getOptionValue("stem"))) {
+                if (commandLine.hasOption("stem")) {
                     runOptionsBuilder.setMainCommand("stem");
                 }
                 return runOptionsBuilder;
             }
         },
-        SOURCE_PATH(Option.builder().argName("source").desc("source file").hasArg(true).required().build()) {
+        SOURCE_PATH(Option.builder().longOpt("source").desc("source file").hasArg(true).required().build()) {
             @Override
             public RunOptionsBuilder setValue(RunOptionsBuilder runOptionsBuilder, CommandLine commandLine) {
                 return runOptionsBuilder.setSourcePath(Paths.get(commandLine.getOptionValue("source")));
             }
         },
-        DEST_PATH(Option.builder().argName("dest").desc("destination file").hasArg(true).required().build()) {
+        DEST_PATH(Option.builder().longOpt("dest").desc("destination file").hasArg(true).required().build()) {
             @Override
             public RunOptionsBuilder setValue(RunOptionsBuilder runOptionsBuilder, CommandLine commandLine) {
                 return runOptionsBuilder.setResultPath(Paths.get(commandLine.getOptionValue("dest")));
             }
         },
-        DICT_PATH(Option.builder().argName("dict").desc("dictionary file to use").hasArg(true).build()) {
+        DICT_PATH(Option.builder().longOpt("dict").desc("dictionary file to use").hasArg(true).build()) {
             @Override
             public RunOptionsBuilder setValue(RunOptionsBuilder runOptionsBuilder, CommandLine commandLine) {
+                if (commandLine.getOptionValue("dict") == null) {
+                    return runOptionsBuilder;
+                }
                 return runOptionsBuilder.setDictPath(Paths.get(commandLine.getOptionValue("dict")));
             }
         };
@@ -67,12 +73,15 @@ public class OptionsGetter {
         }
 
         public static RunOptions mapToRunOptions(CommandLine commandLine) {
-            return getOptions()
+            RunOptionsBuilder runOptionsBuilder = getOptions()
                     .stream()
                     .reduce(new RunOptionsBuilder(),
-                            (runOptionsBuilder, optionCommand) -> optionCommand.setValue(runOptionsBuilder, commandLine),
-                            (u, u2) -> u)
-                    .createRunOptions();
+                            (builder, optionCommand) -> optionCommand.setValue(builder, commandLine),
+                            (u, u2) -> u);
+            if (runOptionsBuilder.getMainCommand() == null) {
+                runOptionsBuilder.setMainCommand("stem");
+            }
+            return runOptionsBuilder.createRunOptions();
         }
     }
 
@@ -90,9 +99,8 @@ public class OptionsGetter {
         } catch (ParseException pe) {
             System.err.println(pe.getMessage());
             System.exit(1);
-            throw new RuntimeException();
+            return new FailedRunOptions();
         }
-
         return OptionCommand.mapToRunOptions(cmd);
     }
 }

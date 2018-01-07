@@ -8,6 +8,7 @@
 
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS=""
+JAVA_HOME="/opt/jdk-9.0.1"
 
 APP_NAME="Gradle"
 APP_BASE_NAME=`basename "$0"`
