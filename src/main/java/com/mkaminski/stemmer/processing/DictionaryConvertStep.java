@@ -19,7 +19,6 @@ public class DictionaryConvertStep implements ProcessStep {
 
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(processingContext.getDest());
             objectOutputStream.writeObject(convertedDict);
-
         }
     }
 

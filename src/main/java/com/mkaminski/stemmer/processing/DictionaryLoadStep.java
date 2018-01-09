@@ -2,6 +2,7 @@ package com.mkaminski.stemmer.processing;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 import com.mkaminski.stemmer.dictionary.loader.SerializedTrieDictionaryLoader;
 
@@ -16,7 +17,8 @@ public class DictionaryLoadStep implements ProcessStep {
         if (dictionaryResource == null) {
             dictionaryResource = this.getClass().getResourceAsStream("pl_dict.ser");
         }
-        new SerializedTrieDictionaryLoader();
+        Map<String, String> dictionaryMap = new SerializedTrieDictionaryLoader().loadDictionary(dictionaryResource);
+        processingContext.setDictionary(dictionaryMap);
     }
 
     @Override
