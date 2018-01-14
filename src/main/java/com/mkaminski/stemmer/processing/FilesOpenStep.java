@@ -21,7 +21,9 @@ public class FilesOpenStep implements ProcessStep {
         }
         processingContext.setDest(Files.newOutputStream(runOptions.getResultPath()));
 
-        processingContext.setDictSource(Files.newInputStream(runOptions.getSourcePath()));
+        if (runOptions.getDictPath() != null && Files.exists(runOptions.getDictPath())) {
+            processingContext.setDictSource(Files.newInputStream(runOptions.getDictPath()));
+        }
     }
 
 }

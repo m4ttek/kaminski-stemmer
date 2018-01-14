@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.Buffer;
+import java.util.HashMap;
 
 import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.trie.PatriciaTrie;
@@ -20,13 +21,13 @@ public class TabToSerializedConverter implements DictionaryConverter {
         try (BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
             return bufferedReader
                     .lines()
-                    .reduce(new PatriciaTrie<>(),
+                    .reduce(new HashMap<>(),
                             this::tabLineParse,
                             (patriciaTrie1, patriciaTrie2) -> patriciaTrie1);
         }
     }
 
-    private PatriciaTrie<String> tabLineParse(PatriciaTrie<String> patriciaTrie, String line) {
+    private HashMap<String, String> tabLineParse(HashMap<String, String> patriciaTrie, String line) {
         String[] split = line.split("\t");
         if (split.length >= 2) {
             patriciaTrie.put(split[0], split[1]);

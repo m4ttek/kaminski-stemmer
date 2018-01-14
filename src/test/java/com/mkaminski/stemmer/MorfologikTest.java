@@ -1,12 +1,23 @@
 package com.mkaminski.stemmer;
 
+import static java.util.stream.Collectors.joining;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
+import com.mkaminski.stemmer.processing.ProcessingContext;
+import com.mkaminski.stemmer.processing.StemmingStep;
 import morfologik.stemming.Dictionary;
 import morfologik.stemming.DictionaryLookup;
+import morfologik.stemming.WordData;
 import morfologik.stemming.polish.PolishStemmer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,6 +37,27 @@ public class MorfologikTest {
         assertTrue(stemsOf("planetariów").contains("planetarium"));
         assertTrue(stemsOf("krowami").contains("krowa"));
         assertTrue(tagsOf("krowami").contains("subst:pl:inst:f"));
+    }
+
+    @Test
+    public void stemTest() throws IOException {
+        // given
+        Path kaminskiStemmerTestPath = Files.createTempDirectory("kaminski_stemmer_test");
+
+        // when
+        Scanner scanner = new Scanner(getClass().getClassLoader().getResourceAsStream("to_stem.txt"))
+                .useDelimiter("([\\s]+|[\\p{Punct}]+)");
+        List<String> stemmedText = new ArrayList<>();
+        while (scanner.hasNext()) {
+            List<WordData> foundWords = dict.lookup(scanner.next());
+            if (foundWords.size() > 0) {
+                stemmedText.add(foundWords.get(0).getStem().toString());
+            }
+        }
+
+        // then
+        assertTrue(stemmedText.size() > 0);
+        assertEquals("Tomek pisać dokumentacja Ala mieć pies", stemmedText.stream().collect(joining(" ")));
     }
 
     private static List<String> stemsOf(String word) {

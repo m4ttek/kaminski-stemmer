@@ -2,7 +2,9 @@ package com.mkaminski.stemmer.processing;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StreamTokenizer;
 import java.util.Map;
+import java.util.Scanner;
 
 import com.mkaminski.stemmer.RunOptions;
 
@@ -16,6 +18,7 @@ public class ProcessingContext {
     private OutputStream dest;
     private InputStream dictSource;
     private Map<String, String> dictionary;
+    private Scanner fileScanner;
 
     public void setRunOptions(RunOptions runOptions) {
         this.runOptions = runOptions;
@@ -55,5 +58,13 @@ public class ProcessingContext {
 
     public void setDictionary(Map<String, String> dictionary) {
         this.dictionary = dictionary;
+    }
+
+    public Scanner getFileScanner() {
+        return fileScanner;
+    }
+
+    public void setFileScanner(Scanner fileScanner) {
+        this.fileScanner = fileScanner;
     }
 }

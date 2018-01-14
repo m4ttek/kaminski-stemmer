@@ -3,11 +3,12 @@ package com.mkaminski.stemmer.processing;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 
 import com.mkaminski.stemmer.converter.TabToSerializedConverter;
+import org.nustaq.serialization.FSTObjectOutput;
 
 public class DictionaryConvertStep implements ProcessStep {
 
@@ -17,13 +18,14 @@ public class DictionaryConvertStep implements ProcessStep {
         try (InputStreamReader inputStreamReader = new InputStreamReader(source)) {
             Serializable convertedDict = new TabToSerializedConverter().convert(inputStreamReader);
 
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(processingContext.getDest());
-            objectOutputStream.writeObject(convertedDict);
+            try (FSTObjectOutput objectOutputStream = new FSTObjectOutput(processingContext.getDest())) {
+                objectOutputStream.writeObject(convertedDict);
+            }
         }
     }
 
     @Override
     public List<String> inCommands() {
-        return List.of("convert");
+        return Collections.singletonList("convert");
     }
 }

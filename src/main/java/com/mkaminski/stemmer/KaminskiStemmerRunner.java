@@ -1,6 +1,7 @@
 package com.mkaminski.stemmer;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import com.mkaminski.stemmer.processing.DictionaryConvertStep;
@@ -25,13 +26,8 @@ public class KaminskiStemmerRunner {
         this.runOptions = runOptions;
         this.processingContext = new ProcessingContext();
         this.processingContext.setRunOptions(runOptions);
-        this.processStepList = List.of(
-                new FilesOpenStep(),
-                new DictionaryConvertStep(),
-                new TokenizationStep(),
-                new DictionaryLoadStep(),
-                new StemmingStep(),
-                new FilesSaveStep());
+        this.processStepList = Arrays.asList(new FilesOpenStep(), new DictionaryConvertStep(), new TokenizationStep(),
+                new DictionaryLoadStep(), new StemmingStep(), new FilesSaveStep());
     }
 
     public KaminskiStemmerRunner(ProcessingContext processingContext, List<ProcessStep> processSteps) {
