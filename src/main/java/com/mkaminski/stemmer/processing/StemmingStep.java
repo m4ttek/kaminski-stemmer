@@ -2,15 +2,11 @@ package com.mkaminski.stemmer.processing;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.StreamTokenizer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.sun.deploy.util.StringUtils;
-import org.apache.commons.collections4.Trie;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 
 /**
@@ -25,16 +21,9 @@ public class StemmingStep implements ProcessStep {
         try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(processingContext.getDest())) {
             while (scanner.hasNext()) {
                 String token = scanner.next();
-//                if (dictionary.containsKey(token)) {
-                    outputStreamWriter.append(stemStringToken(dictionary, token)).append(" ");
-//                } else {
-//                    Matcher matcher = pattern.matcher(token);
-//                    while (matcher.find()) {
-//                        String groupToken = matcher.group();
-//                        outputStreamWriter.append(stemStringToken(dictionary, groupToken));
-//                    }
-//                    outputStreamWriter.append(" ");
-//                }
+                outputStreamWriter
+                        .append(stemStringToken(dictionary, token))
+                        .append(" ");
             }
         } catch (IOException ex) {
             System.err.println(ex.getLocalizedMessage());

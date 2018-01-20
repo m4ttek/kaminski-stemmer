@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,33 +40,41 @@ public class MorfologikTest {
     @Test
     public void stemTest() {
         // when
-        Scanner scanner = new Scanner(getClass().getClassLoader().getResourceAsStream("to_stem.txt"))
-                .useDelimiter("([\\s]+|[\\p{Punct}]+)");
-        List<String> stemmedText = new ArrayList<>();
-        while (scanner.hasNext()) {
-            List<WordData> foundWords = dict.lookup(scanner.next());
-            if (foundWords.size() > 0) {
-                stemmedText.add(foundWords.get(0).getStem().toString());
-            }
-        }
+        Scanner scanner = getResourceScannerWithDelimiter("to_stem.txt");
+        List<String> stemmedText = stemText(scanner);
 
         // then
         assertTrue(stemmedText.size() > 0);
-        assertEquals("Tomek pisać dokumentacja Ala mieć pies", stemmedText.stream().collect(joining(" ")));
+        assertEquals("Tomek pisać dokumentacja  Ala mieć pies", stemmedText.stream().collect(joining(" ")));
     }
 
     @Test
     public void stemOldPolishTest() throws IOException {
         // given
         Path kaminskiStemmerTestPath = Files.createTempDirectory("morfologik_stemmer_test");
-        Path stemmedTextPath = Paths.get(kaminskiStemmerTestPath.toString(), "stemmed.txt");
+        Path stemmedTextPath = Paths.get(kaminskiStemmerTestPath.toString(), "pan_tadeusz_stemmed.txt");
 
         // when
-        Scanner scanner = new Scanner(getClass().getClassLoader().getResourceAsStream("pan_tadeusz.txt"))
-                .useDelimiter("([\\s]+|[\\p{Punct}]+)");
+        Scanner scanner = getResourceScannerWithDelimiter("pan_tadeusz.txt");
+        List<String> stemmedText = stemText(scanner);
+
+        // then
+        assertTrue(stemmedText.size() > 0);
+
+        writeTextDelimitedWithSpace(stemmedTextPath, stemmedText);
+    }
+
+
+
+    private Scanner getResourceScannerWithDelimiter(String resourceName) {
+        InputStream resource = getClass().getClassLoader().getResourceAsStream(resourceName);
+        return new Scanner(resource).useDelimiter("([\\s]+|[\\p{Punct}]+)");
+    }
+
+    private List<String> stemText(Scanner delimitedResource) {
         List<String> stemmedText = new ArrayList<>();
-        while (scanner.hasNext()) {
-            String nextWord = scanner.next();
+        while (delimitedResource.hasNext()) {
+            String nextWord = delimitedResource.next();
             List<WordData> foundWords = dict.lookup(nextWord);
             if (foundWords.size() > 0) {
                 stemmedText.add(foundWords.get(0).getStem().toString());
@@ -73,10 +82,11 @@ public class MorfologikTest {
                 stemmedText.add(nextWord);
             }
         }
+        return stemmedText;
+    }
 
-        // then
-        assertTrue(stemmedText.size() > 0);
-        Files.write(stemmedTextPath, singletonList(stemmedText.stream().collect(Collectors.joining(" "))));
+    private void writeTextDelimitedWithSpace(Path path, List<String> delimitedText) throws IOException {
+        Files.write(path, singletonList(delimitedText.stream().collect(Collectors.joining(" "))));
     }
 
     private static List<String> stemsOf(String word) {

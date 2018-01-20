@@ -55,7 +55,7 @@ public class KaminskiStemmerTest {
 
         // then
         assertTrue(Files.exists(stemmedText));
-        assertEquals("Tomek pisać dokumentacja Alo mój pies", Files.readAllLines(stemmedText).get(0));
+        assertEquals("Tomek pisać dokumentacja Alo mój pies ", Files.readAllLines(stemmedText).get(0));
     }
 
     @Test
