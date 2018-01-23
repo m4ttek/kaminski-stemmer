@@ -1,5 +1,6 @@
 package com.mkaminski.stemmer;
 
+import static com.mkaminski.stemmer.TestUtil.getOutputFileForSaveStemmingResult;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,12 +10,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Mateusz Kamiński
  */
 public class KaminskiStemmerTest {
+
+    private static Path kaminskiStemmerTestPath;
+
+    @BeforeAll
+    public static void setupDictionary() throws IOException {
+        kaminskiStemmerTestPath = Files.createTempDirectory("morfologik_stemmer_test");
+    }
 
     @Test
     void testDictionaryConversion() throws URISyntaxException, IOException {
@@ -39,8 +48,7 @@ public class KaminskiStemmerTest {
     @Test
     void testStemming() throws URISyntaxException, IOException {
         // given
-        Path kaminskiStemmerTestPath = Files.createTempDirectory("kaminski_stemmer_test");
-        Path stemmedText = Paths.get(kaminskiStemmerTestPath.toString(), "stemmed.txt");
+        Path stemmedText = getOutputFileForSaveStemmingResult(kaminskiStemmerTestPath, "stemmed");
 
         // when
         KaminskiStemmerRunner kaminskiStemmerRunner = new KaminskiStemmerRunner(

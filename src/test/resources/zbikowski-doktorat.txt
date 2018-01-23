@@ -1,0 +1,7564 @@
+POLITECHNIKA
+WARSZAWSKA
+Wydział Elektroniki
+i Technik Informacyjnych
+
+ROZPRAWA DOKTORSKA
+mgr inż. Kamil Żbikowski
+Konstrukcja funkcji kary dla klasyfikatorów SVM w
+automatycznych strategiach inwestycyjnych
+
+Promotor
+prof. dr hab. inż. Mieczysław Muraszkiewicz
+
+Warszawa 2016
+
+Streszczenie
+Niniejsza praca poświ˛econa została aplikacyjnym zastosowaniom metod
+uczenia maszynowego w kontekście analizy finansowych szeregów czasowych.
+W pracy tej zaproponowana została nowa konstrukcja zmiennej w czasie funkcji
+kary oraz oparty na niej klasyfikator bazujacy
+˛ na Maszynie Wektorów Nośnych.
+Propozycja uzależnienia wartości funkcji kary od parametrów bazowego szeregu
+motywowana jest specyfika˛ finansowych szeregów czasowych. Charakteryzuja˛ si˛e
+one zmienna˛ w czasie wartościa˛ oczekiwana˛ oraz wariancja,˛ która posiada własność
+grupowania. Sprawia to, iż stosowanie statycznej oceny bł˛edu klasyfikacji wydaje
+si˛e intuicyjnie nie być najskuteczniejsza˛ metoda.˛
+Analiza tego rodzaju danych wymaga konstrukcji specjalnego systemu
+informatycznego, który pozwoli na adekwatne testowanie proponowanego
+klasyfikatora metoda˛ testowania kroczacego.
+˛
+System taki został przygotowany na
+potrzeby weryfikacji postawionej w niniejszej pracy hipotezy.
+Przeprowadzona analiza pokazała, iż wyniki predykcji krótkoterminowych
+trendów rynkowych z użyciem proponowanej funkcji kary sa˛ statystycznie istotnie
+lepsze niż z użyciem funkcji bazowej. Proponowana˛ funkcj˛e kary wykorzystano
+w algorytmie tworzacym
+˛
+strategi˛e inwestycyjna.˛ Testy zostały przeprowadzone z
+użyciem danych kwotowań akcji amerykańskich oraz waluty bitcoin. Eksperymenty
+wskazuja˛ na znaczac
+˛ a˛ popraw˛e wyników w zakresie stopy zwrotu oraz ryzyka
+mierzonego maksymalnym procentowym spadkiem w okresie testowania.
+
+Słowa kluczowe: maszyna wektorów nośnych, funkcja kary, szeregi czasowe,
+strategie inwestycyjne
+
+Abstract
+This thesis is dedicated to the problem of machine learning algorithms applications
+to the area of financial time series prediction.
+A new formula for constructing a penalty function that varies over time was
+proposed. It was used then to create an upgraded Support Vector Machine classifier.
+The idea of coupling penalty function and the underlying times series is motivated
+by the specific characteristics of financial time series. Its distribution, expected value
+and variance change over time. These properties directly cause difficulties in static
+analysis of classifications errors. Much more robust techniques should be applied.
+Analysis of such data requires a dedicated computational system that would
+allow to adequately test the proposed classifier with the use of walk forward
+analysis method. Such a system was developed for the purpose of verification of
+the hypothesis presented in the presented thesis.
+Experiments that were conducted showed that the results of short-term trends
+predictions with the use of proposed penalty function are better than with the use
+of plain penalty function . The statistical significance of the results was verified.
+The penalty function was then used for the purpose of constructing trading strategy.
+The data used for the experiments consisted of US stock and bitcoin quotations.
+Experiments show significant improvement in terms of the annual rate of return and
+the risk measured by the maximal drawdown over the test period.
+
+Keywords: support vector machine, penalty function, time series, investment
+strategies
+
+Spis treści
+Od Autora
+
+11
+
+1
+
+12
+
+Wst˛ep
+1.1
+
+Efektywność rynków finansowych . . . . . . . . . . . . . . . . . . 17
+
+1.2
+
+Zakres pracy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20
+
+1.3
+2
+
+3
+
+1.2.1
+
+Motywacja . . . . . . . . . . . . . . . . . . . . . . . . . . 20
+
+1.2.2
+
+Teza . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25
+
+Treść pracy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25
+
+Terminy podstawowe
+
+29
+
+2.1
+
+Uczenie maszynowe . . . . . . . . . . . . . . . . . . . . . . . . . 29
+
+2.2
+
+Maszyny wektorów nośnych . . . . . . . . . . . . . . . . . . . . . 34
+
+Finansowe szeregi czasowe
+
+39
+
+3.1
+
+Charakterystyka finansowych szeregów czasowych . . . . . . . . . 39
+
+3.2
+
+Wybrane metody analiz rynków finansowych . . . . . . . . . . . . 41
+
+3.3
+
+Wskaźniki analizy technicznej . . . . . . . . . . . . . . . . . . . . 43
+3.3.1
+
+Average True Range . . . . . . . . . . . . . . . . . . . . . 44
+
+3.3.2
+
+Vortex Indicator . . . . . . . . . . . . . . . . . . . . . . . . 46
+
+3.3.3
+
+On-Balance Volume . . . . . . . . . . . . . . . . . . . . . 47
+
+3.3.4
+
+Oscylator Williams’a . . . . . . . . . . . . . . . . . . . . . 48
+
+7
+
+Spis treści
+
+4
+
+3.3.6
+
+Odchylenie standardowe stóp zwrotu . . . . . . . . . . . . 51
+52
+
+Dane . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 53
+4.1.1
+
+Przygotowanie danych . . . . . . . . . . . . . . . . . . . . 53
+
+4.1.2
+
+Wybór cech za pomoca˛ indeksu Fishera . . . . . . . . . . . 55
+
+4.1.3
+
+Procedura skalowania . . . . . . . . . . . . . . . . . . . . 57
+
+4.2
+
+Środowisko testowe . . . . . . . . . . . . . . . . . . . . . . . . . . 58
+
+4.3
+
+Nowa funkcji kary dla klasyfikatora SVM . . . . . . . . . . . . . . 59
+
+4.4
+
+6
+
+Relative strength index . . . . . . . . . . . . . . . . . . . . 49
+
+Metoda budowy strategii inwestycyjnej
+4.1
+
+5
+
+3.3.5
+
+4.3.1
+
+Sformułowanie problemu optymalizacyjnego . . . . . . . . 61
+
+4.3.2
+
+Funkcja ważaca
+˛ zależna od wolumenu . . . . . . . . . . . . 63
+
+Metoda budowy strategii inwestycyjnej . . . . . . . . . . . . . . . 64
+
+Eksperymenty
+
+67
+
+5.1
+
+Istotność statystyczna VW-SVM . . . . . . . . . . . . . . . . . . . 67
+
+5.2
+
+Walidacja strategii inwestycyjnej . . . . . . . . . . . . . . . . . . . 72
+
+5.3
+
+Strategia inwestycyjna - akcje amerykańskie . . . . . . . . . . . . . 77
+
+5.4
+
+Strategia inwestycyjna - bitcoin . . . . . . . . . . . . . . . . . . . . 91
+5.4.1
+
+Wprowadzenie . . . . . . . . . . . . . . . . . . . . . . . . 91
+
+5.4.2
+
+Modele predykcyjne . . . . . . . . . . . . . . . . . . . . . 93
+
+5.4.3
+
+Dane testowe . . . . . . . . . . . . . . . . . . . . . . . . . 95
+
+5.4.4
+
+Wyniki eksperymentów . . . . . . . . . . . . . . . . . . . 97
+
+Podsumowanie
+
+101
+
+Bibliografia
+
+105
+
+Spis rysunków
+
+112
+
+8
+
+Spis treści
+
+Spis tablic
+
+115
+
+Dodatek A Kod strategii inwestycyjnej w j˛ezyku Java
+
+117
+
+Indeks
+
+127
+
+9
+
+Nota terminologiczna
+W niniejszej pracy termin predykcja odnosi si˛e do zadań przewidywania klasy dla
+zadania klasyfikacji binarnej, nie zaś zadania regresji. Słowo to zostało użyte aby
+podkreślić istotność elementu czasowego w badanych zagadnieniach.
+
+Od Autora
+Handel algorytmiczny jest relatywnie młoda˛ dziedzina.˛ Pod wzgl˛edem różnorodności źródeł
+wiedzy, na których bazuja˛ metody wykorzystywane przy tworzeniu automatycznych strategii
+inwestycyjnych dziedzina ta nie ust˛epuje tak zaawansowanym zagadnieniom jak loty
+kosmiczne. W ramach szerokiego spektrum prac badawczych wykorzystywana jest nie tylko
+ekonomia i finanse ale również fizyka, statystyka, teoria optymalizacji, uczenie maszynowe,
+sztuczna inteligencja, filozofia czy socjologia. Badanie istotności wyników musi odbywać
+si˛e z niezwykła˛ precyzja˛ i dbałościa˛ o zachowanie właściwego metodologicznie podejścia
+w zakresie testowania strategii. Nie jest bowiem sztuka˛ dopasowanie algorytmu do
+danych z przeszłości. Prawdziwym osiagni˛
+˛ eciem staje si˛e opracowanie strategii, która na
+próbie testowej oraz w trakcie rzeczywistego handlu jest w stanie zachowywać własności
+zaobserwowane w trakcie uczenia. W niniejszej pracy pokazano również t˛e ważna,˛ choć
+nader cz˛esto niedoceniana˛ przez teoretyków, stron˛e konstrukcji strategii automatycznych.
+Podzi˛ekowania
+Pragn˛e podzi˛ekować prof. Mieczysławowi Muraszkiewiczowi, bez którego wsparcia
+niemożliwe byłoby ukończenie niniejszej pracy. Chciałbym podzi˛ekować Piotrowi
+Smoleniowi, prezesowi Turbine Analytics S.A., w której odpowiadałem za implementacj˛e
+strategii algorytmicznych oraz systemy backtestingowe za umożliwienie mi współtworzenia
+pierwszego polskiego funduszu algorytmicznego. Wyrazy wdzi˛eczności składam także prof.
+Piotrowi Gawrysiakowi oraz dyr. Grzegorzowi Ostrowskiemu z mBank S.A. za nieoceniona˛
+pomoc pozwalajac
+˛ a˛ mi na ukończenie tej pracy.
+
+11
+
+Rozdział 1
+Wst˛ep
+If failure had no penalty success
+would not be a prize.
+Terry Pratchett, Sourcery
+
+Handel jest nieodłacznym
+˛
+elementem ludzkiej działalności od zarania
+dziejów. To dzi˛eki niemu możliwa jest efektywna wymiana dóbr. W swoich
+poczatkach
+˛
+polegał on wyłacznie
+˛
+na obrocie dobrami materialnymi. Wraz
+z jego rozwojem pojawiła si˛e potrzeba dywersyfikacji ryzyka zwiazanego
+˛
+z
+prowadzeniem działalności handlowej. Z tego powodu powstała m.in. Kompania
+Wschodnioindyjska, która była pierwsza˛ na świecie spółka˛ akcyjna.˛ Szybko
+zauważono, że akcje przedsi˛ebiorstw moga˛ być zbywalne, a spekulacja może być
+źródłem znaczacych
+˛
+dochodów. Powstały pierwsze giełdy, gdzie można było nimi
+handlować. W dalszej kolejności rozwin˛eły si˛e kolejne instrumenty finansowe
+takie jak obligacje czy instrumenty pochodne, które umożliwiały dost˛ep do
+finansowania oraz dywersyfikacj˛e ryzyka. W najnowszej historii, wraz z rozwojem
+technik cyfrowych, nastapił
+˛ dynamiczny rozwój elektronicznych platform handlu, a
+transakcje zawierane przez maklerów, bezpośrednio na parkiecie giełdy, odchodza˛
+powoli do lamusa (obecnie wolumen transakcji zawieranych droga˛ elektroniczna˛ to
+12
+
+Rozdział 1. Wst˛ep
+
+81%).
+Wraz z rozwojem rynków finansowych pojawiły si˛e podmioty, których
+głównym celem jest osiagni˛
+˛ ecie krótkoterminowego zysku dzi˛eki spekulacji
+dotyczacej
+˛
+ceny danego aktywa. Idea wzbogacania si˛e w ten właśnie sposób
+jest nieprzerwanie poddawana w watpliwość
+˛
+jeśli chodzi o jej społeczny i
+etyczny wymiar. Nie ulega jednak watpliwości,
+˛
+że spekulacja w pewnych
+ramach prawnych oraz pod odpowiednia˛ kontrola˛ instytucji nadzorujacych
+˛
+jest zjawiskiem ze wszech miar pożadanym.
+˛
+Dzi˛eki niej aktywa wyceniane
+sa˛ efektywnie a handel uzyskuje odpowiednia˛ płynność. W nast˛epstwie tego
+podmioty zainteresowane długoterminowa˛ inwestycja˛ lub zabezpieczeniem na
+rynku instrumentów pochodnych nie ponosza˛ ryzyka płynności, który jest bardzo
+istotnym składnikiem ryzyka inwestycyjnego.
+Wraz ze wspomnianym rozwojem technik cyfrowych i zwi˛ekszajac
+˛ a˛ si˛e
+moca˛ obliczeniowa˛ nastapił
+˛
+również ogromny post˛ep w dziedzinie sztucznej
+inteligencji (ang. artificial intelligence, AI). Algorytmy, które pozostawały dotad
+˛
+w sferze koncepcyjnej mogły zostać zaimplementowane oraz wykorzystane do
+realnych zadań. Temu rozwojowi towarzyszyło również wprowadzanie solidnych
+naukowych standardów [McCorduck, 2004]. Wi˛eksza˛ uwag˛e zacz˛eto przykładać do
+rozwiazywania
+˛
+konkretnych podproblemów. Pracowano także nad powiazaniem
+˛
+z
+innymi dziedzinami nauki, w których algorytmy AI znajdowały liczne aplikacyjne
+zastosowania. Jedna˛ z takich dziedzin sa˛ finanse oraz dyscypliny pokrewne, w
+których od lat wykorzystuje si˛e ich różne kategorie. Klasycznymi przykładami sa˛
+tutaj systemy wykrywajace
+˛ oszustwa finansowe, tj. pranie brudnych pieni˛edzy (ang.
+money laundering) czy oszustwa ubezpieczeniowe (ang. insurance fraud). Przeglad
+˛
+literatury dotyczacej
+˛ tego zagadnienia znaleźć można w [Ngai et al., 2011].
+Oszustwa finansowe nie sa˛ jedynym przykładem wykorzystania algorytmów AI
+w dziedzinie finansów. Sa˛ one również używane w ocenie ryzyka kredytowego,
+
+13
+
+Rozdział 1. Wst˛ep
+
+zarzadzaniu
+˛
+portfelem inwestycyjnym jak również w predykcji i planowaniu
+finansowym. Analiz˛e porównawcza˛ wybranych metod oraz przeglad
+˛ literatury
+zwiazanej
+˛
+z tymi zagadnieniami znaleźć można w [Bahrammirzaee, 2010].
+Z punktu widzenia inwestycji na rynkach finansowych szczególnie interesujaca
+˛
+jest weryfikacja przydatności metod AI w procesie budowy portfela inwestycyjnego
+oraz predykcji finansowych szeregów czasowych. Tego typu aplikacyjne
+zastosowanie algorytmu AI b˛edzie nazywane dalej automatyczna˛ strategia˛
+inwestycyjna˛ lub po prostu strategia˛ inwestycyjna.˛ Wi˛ekszość opisanych w
+literaturze strategii inwestycyjnych jest oparta na metodach analiz rynków
+finansowych zaczerpni˛etych z innych dziedzin. Idea˛ takiego połaczenia
+˛
+jest zwykle
+uzyskanie synergii wynikajacej
+˛ z wykorzystania istniejacej
+˛ wiedzy oraz zdolności
+algorytmów AI do przeprowadzania analiz na ogromnych zbiorach danych. W
+szerszym uj˛eciu, strategia inwestycyjna jest zbiorem reguł inwestycyjnych wraz
+z precyzyjna˛ definicja˛ ich realizacji. Aby wymaganie automatyzacji zostało
+spełnione konieczne jest aby również operacyjnie dany algorytm był w pełni
+w stanie realizować samodzielny handel na rynku. W tym celu konieczne jest
+zintegrowanie ze strategia˛ inwestycyjna˛ algorytmów zarzadzania
+˛
+pozycja˛ oraz
+precyzyjna definicja aktywów, którymi handel jest dopuszczalny 1 .
+Moc algorytmu uczenia maszynowego (b˛edacych
+˛
+jedna˛ z metod AI) jest
+pochodna˛ wyboru właściwej funkcji celu, której to cz˛eścia˛ jest funkcja kary2 .
+Konstrukcje funkcji kary w algorytmach uczenia maszynowego maja˛ istotny wpływ
+na skuteczność tworzonych modeli. Cz˛estokroć używane algorytmy wraz z ich
+funkcjami kary traktowane sa˛ jako czarna skrzynka, do której doprowadzone
+zostaja˛ dane wejściowe oraz ewentualnie wyniki z poprzednich iteracji. Kalibracja
+modelu polega na dopasowaniu bardziej lub mniej standardowych współczynników
+1
+
+W szczególności nie wystarczy tu definicja samej klasy aktywów tak jak to ma cz˛esto
+miejsce w wypadku strategii inwestycyjnych kontrolowanych przez zarzadzaj
+˛
+acych
+˛
+funduszami
+inwestycyjnymi.
+2
+Szerzej o definicji funkcji celu oraz jej relacji z funkcja˛ kary w rozdziale 2.
+
+14
+
+Rozdział 1. Wst˛ep
+
+określajacych
+˛
+parametryzacj˛e algorytmu. Dla niektórych problemów warto jednak
+si˛egnać
+˛ do wn˛etrza tej skrzynki i sprawdzić czy aby jej wewn˛etrzne mechanizmy
+sa˛ rzeczywiście idealnie dostosowane do problemu, który staramy si˛e rozwiazać.
+˛
+Pojawia si˛e pytanie: kiedy jest to zasadne i konieczne? W niniejszej pracy pokazane
+zostanie, że takim przypadkiem sa˛ z pewnościa˛ sytuacje, w których mamy do
+czynienia z dynamicznie zmieniajacymi
+˛
+si˛e danymi np. z danymi dostarczanymi w
+postaci potoku lub takimi, które co prawda dost˛epne sa˛ w postaci statycznej ale ich
+momenty rozkładu sa˛ zmienne w ramach posiadanej próbki. Idealnym przykładem,
+który wpisuje si˛e w obie te kategorie sa˛ finansowe szeregi czasowe. Zagadnienie to
+staje si˛e tym bardziej istotne wobec rewolucji dokonujacej
+˛ si˛e w ostatnich latach w
+zakresie zagadnień dotyczacych
+˛
+retencji danych. Jesteśmy w stanie przetwarzać i
+analizować coraz wi˛eksze wolumeny danych. Kluczowa˛ fraza˛ jest tutaj „Big Data”.
+Jest to bardzo szeroki termin, daleko wybiegajacy
+˛ poza obszar niniejszej pracy.
+Stosowany jest do określenia ogółu przemian wynikajacych
+˛
+ze zwi˛ekszajacych
+˛
+si˛e
+możliwości przetwarzania znacznie wi˛ekszych niż w przeszłości zbiorów danych.
+W kontekście rozważań prezentowanych w niniejszej pracy można stwierdzić, iż
+ich wyniki działaja˛ synergicznie w stosunku do rozwoju technologii zwiazanych
+˛
+z
+„Big Data”.
+Istnieje wiele przykładów łaczenia
+˛
+technik uczenia maszynowego oraz
+tradycyjnych metod analiz rynków finansowych w celu zwi˛ekszenia skuteczności
+inwestycji w aktywa finansowe. Jedna˛ z pierwszych prac w tym zakresie jest
+[Hammerbacher and Yager, 1981], gdzie teoria podzbiorów rozmytych została
+wykorzystana do rozwiazania
+˛
+wielokryterialnego problemu decyzyjnego selekcji
+akcji. W [Wong, 1991] wielowarstwowa sieć neuronowa została zaproponowana w
+celu prognozy wartości szeregów czasowych. Jedna˛ z ciekawszych konsekwencji
+tego zastosowania algorytmu uczenia maszynowego jest to, iż nie wymaga ono
+żadnych dodatkowych założeń odnośnie leżacego
+˛
+u podstaw rozkładu.
+
+15
+
+Rozdział 1. Wst˛ep
+
+W wielu kolejnych badaniach podj˛eto prób˛e zwi˛ekszenia skuteczności
+modeli. W [Refenes et al., 1997] zaproponowana została funkcja kary dla
+sieci neuronowych w algorytmie wstecznej propagacji. Otrzymany estymator
+zwi˛ekszał istotność ostatnich obserwacji przez zastosowanie parametru zanikania
+dla funkcji sigmoidalnej. Dalsza poprawa wyników może zostać osiagni˛
+˛ eta
+dzi˛eki zastosowaniu selekcji atrybutów. W szczególności w [Hsu, 2011] użyto
+algorytmu selekcji zmiennych opartego na wstecznej propagacji. W wielu innych
+badaniach można znaleźć inne techniki selekcji atrybutów ([Dai et al., 2012],
+[Lee, 2009], [Hsu, 2011], [Kara et al., 2011], [Huang, 2012], [Ng et al., 2014],
+[Zhang et al., 2014]).
+W ostatnich latach jednak badania nad wykorzystaniem metod uczenia
+maszynowego w celu predykcji finansowych szeregów czasowych kieruja˛
+si˛e w stron˛e właczenia
+˛
+wiedzy zdobywanej przez pokolenia inwestorów
+finansowych do dobrze zdefiniowanych modeli uczenia maszynowego. W
+[Chavarnakul and Enke, 2008] podkreślona została rola wolumenu transakcyjnego
+dla wyjaśniania zmian cen akcji. W pracy tej wykorzystano wskaźniki analizy
+technicznej bazujace
+˛ właśnie na wolumenie transakcyjnym jako wejścia do sieci
+neuronowej a nast˛epnie wykonano testy dla danych z indeksu S&P500. Również
+w [Chu et al., 2009] podkreślona została rola wolumenu transakcyjnego. W pracy
+tej w celu przewidywania wartości indeksów giełdowych wykorzystano rozmyty
+model szeregu czasowego typu 2 (ang. type 2 fuzzy time-series model) w połaczeniu
+˛
+ze wskaźnikami analizy technicznej bazujacymi
+˛
+na wolumenie.
+W ostatnich latach w badaniach podejmowano próby połaczenia
+˛
+technik
+selekcji atrybutów, wykorzystania wolumenu transakcyjnego oraz wskaźników
+analizy technicznej z klasyfikatorem maszyny wektorów nośnych (ang. Support
+Vector Machine, SVM). W [Kara et al., 2011] przeprowadzony został eksperyment
+porównujacy
+˛
+skuteczność sieci neuronowych oraz SVM w zastosowaniach
+
+16
+
+Rozdział 1. Wst˛ep
+
+predykcji indeksów giełdowych z użyciem wskaźników analizy technicznej.
+W [Rosillo et al., 2013] użyto Indeksu Zmienności (ang. Volatility Index) oraz
+wskaźników analizy technicznej w celu przewidywania tygodniowych zmian w
+indeksie S&P500. W [Dai et al., 2012] użyto metody MARS selekcji atrybutów a
+nast˛epnie wykorzystano model SVR (adaptacja modelu SVM dla problemu regresji)
+w celu predykcji wartości indeksów akcji.
+Istniejace
+˛ badania pokazuja,˛ iż zastosowanie oddzielnie selekcji atrybutów,
+właczenia
+˛
+analizy wolumenu transakcyjnego oraz analizy technicznej prowadza˛ do
+znaczacej
+˛ poprawy skuteczności modeli. Z tej perspektywy interesujace
+˛ wydaje si˛e
+być połaczenie
+˛
+tychże operacji w ramach jednego eksperymentu lub nawet pójście
+o krok dalej i dostosowanie jednego z jader
+˛ sztucznej inteligencji do tego rodzaju
+danych.
+
+1.1
+
+Efektywność rynków finansowych
+
+W kontekście badań majacych
+˛
+na celu skuteczna˛ predykcj˛e finansowych szeregów
+czasowych z użyciem metod uczenia maszynowego zasadna jest refleksja na ile
+zadanie to jest wykonalne. W dobie nieograniczonego dost˛epu do informacji
+wydawać by si˛e mogło, że z uwagi na brak barier komunikacyjnych wycena
+aktywów finansowych powinna odzwierciedlać cała˛ dost˛epna˛ wiedz˛e na ich temat.
+Ekonomiści od lat zastanawiali si˛e nad efektywnościa˛ rynków finansowych.
+W 1970 Fama przedstawił hipotez˛e rynku efektywnego (ang. efficient-market
+hypothesis, EMH) w trzech wersjach [Fama, 1970]:
+• słaba - zakłada brak możliwości predykcji przyszłych cen aktywów
+finansowych wyłacznie
+˛
+na podstawie cen z przeszłości.
+• semi-silna - ponad powyższe, zakłada, że wszystkie dost˛epne publicznie
+informacje znajduja˛ swoje odzwierciedlenie w bieżacej
+˛ wycenie aktywów
+17
+
+Rozdział 1. Wst˛ep
+
+finansowych. Nie jest zatem skuteczna wycena bazujaca
+˛
+na analizie
+fundamentalnej.
+• silna - ponad powyższe założenia, przyjmuje iż również informacje, które
+nie sa˛ dost˛epne publicznie zawarte sa˛ w cenie. Wówczas nikt nie osiagnie
+˛
+ponadprzeci˛etnej stopy zwrotu. W szczególności nie jest możliwy tzw. insider
+trading, czyli zawieranie transakcji na podstawie niepublicznych informacji o
+spółce giełdowej3 .
+EMH zakłada m.in. zerowe koszty transakcyjne oraz racjonalność oczekiwań
+inwestorów. Istnieja˛ liczne prace, które starały si˛e zbadać czy rzeczywiście
+na rynkach finansowych wyst˛epuje któraś z form EMH w powyższym
+rozumieniu. Wyniki tych prac znacznie różnia˛ si˛e mi˛edzy soba.˛ Przy odpowiednio
+sformułowanych założeniach można udowodnić poprawność matematyczna˛ modeli
+jak np. Samuelson [Samuelson, 1965]. Jednak należy zwrócić uwag˛e, że
+warunki te znaczaco
+˛ odbiegaja˛ od rynkowych, zarówno jeśli chodzi o typowo
+ekonomiczne podejście do racjonalności oczekiwań, kosztów transakcyjnych jak
+i do natury samych danych reprezentujacych
+˛
+proces bładzenia
+˛
+losowego. Zostało
+to pokazane choćby w [MacKinlay, 2001]. Wiele badań wskazuje także na to, że
+istnienie informacyjnie efektywnych rynków jest niemożliwe, wartość oczekiwana
+wynagrodzenia za zbieranie informacji bowiem byłaby zerowa, co powodowałoby,
+że rynki finansowe przestałyby istnieć [Stiglitz, 1980].
+Jednym ze sposób na zobrazowanie potencjału informacyjnego finansowych
+szeregów czasowych jest porównanie ich z procesem bładzenia
+˛
+losowego. Proces
+cen finansowych szeregów czasowych bywa cz˛esto porównywany do procesu
+bładzenia
+˛
+losowego lub jego reprezentacji w przestrzeni ciagłej
+˛
+nazywanej
+procesem Wienera [Magdon-Ismail et al., 2003]. Podstawowym założeniem jest, że
+3
+
+Tego rodzaju handel jest legalny. Ograniczony jest jednak szeregiem restrykcji, które nie
+pozwalaja˛ osobom b˛edacym
+˛
+w posiadaniu informacji poufnej dokonywać transakcji zanim nie
+zostanie o niej poinformowany szeroki rynek.
+
+18
+
+Rozdział 1. Wst˛ep
+
+Rysunek 1.1: Szeregi czasowe pierwszych różnic dla indeksu WIG20 oraz dla
+procesu bładzenia
+˛
+losowego.
+kolejne przyrosty sa˛ niezależne i zdefiniowane nast˛epujaco:
+˛
+Wt − Ws ∼ N (0, t − s) ∧ (0 ≤ s ≤ t)
+
+(1.1)
+
+Empirycznie trudno rozróżnić losowo wygenerowany proces bładzenia
+˛
+losowego od rzeczywistej trajektorii wykresu giełdowego. Wprowadzajac
+˛
+prosta˛ operacj˛e polegajac
+˛ a˛ na obliczeniu pierwszych różnic obu szeregów
+spodziewalibyśmy si˛e uzyskać w wyniku proces białego szumu. Zgodnie z definicja˛
+19
+
+Rozdział 1. Wst˛ep
+
+proces białego szumu jest ściśle stacjonarny4 , tj. posiada stała˛ w czasie wariancj˛e
+oraz wartość oczekiwana.˛
+Jak widać na wykresie (1.1) szereg utworzony przez operacj˛e różnicowania
+trajektorii giełdowej odbiega od modelowego białego szumu. Cechuje go zmienna
+w czasie wariancja, której wartości wykazuja˛ statystycznie istotna˛ autokorelacj˛e.
+Jest to jeden z argumentów przemawiajacych
+˛
+za tym, iż procesy cen na rynkach
+finansowych posiadaja˛ pami˛eć. Mi˛edzy innymi z tych właściwości korzysta
+przedstawiony w rozdziale 3.2 model ARCH.
+
+1.2
+1.2.1
+
+Zakres pracy
+Motywacja
+
+Gdyby hipoteza efektywności rynków finansowych była prawdziwa ich analiza nie
+byłaby zasadna. Jak zostało pokazane w rozdziale 1.1 istnieje szereg watpliwości
+˛
+jeśli chodzi o istnienie takiej efektywności nawet w słabej formie. Potwierdzeniem
+tej tezy jest to, iż analiza˛ rynków finansowych zajmuje si˛e wielu inwestorów
+zarówno prywatnych, jak instytucjonalnych takich, jak banki czy fundusze
+inwestycyjne.
+Mnogość publikacji naukowych, w których autorzy staraja˛ si˛e zrozumieć
+i przewidzieć zachowania rynków finansowych świadczy o ciagłej
+˛
+aktualności
+problemu. Wi˛ekszość badaczy zdaje si˛e podzielać opini˛e, iż nie istnieje
+rodzaj rozwiazania
+˛
+idealnego, które mogłoby działać efektywnie w każdych
+warunkach. Jest to problem, który z uwagi na swój charakter obarczony jest
+wysoka˛ niepewnościa˛ w stosunku do przyszłych zwrotów. Zawsze wia˛że si˛e z
+akceptacja˛ pewnego poziomu ryzyka, a co za tym idzie również strat. Kierunek
+prac sprowadza si˛e wi˛ec do próby zrozumienia pewnych osobliwości rynków
+4
+
+Precyzyjna definicja stacjonarności dla szeregu czasowego zostanie podana w rozdziale 3
+
+20
+
+Rozdział 1. Wst˛ep
+
+finansowych i uzyskania przewagi informacyjnej, która czasowo pozwoli na
+uzyskanie ponadprzeci˛etnych stóp zwrotu. Wykorzystanie algorytmów uczenia
+maszynowego wpisuje si˛e w ten nurt. Na podstawie obserwacji uczestników
+rynku oraz reguł nim rzadz
+˛ acych
+˛
+można skonstruować algorytmy, które właczaj
+˛
+a˛
+tego rodzaju informacje do tworzonych strategii. Jednym z takich spostrzeżeń
+jest potwierdzanie znaczacych
+˛
+ruchów rynkowych przez wzrost wolumenu
+transakcyjnego. W niniejszej pracy przedstawiono tego rodzaju powiazanie
+˛
+- polega
+ono na uwzgl˛ednieniu bezpośrednio w procesie uczenia informacji dotyczacych
+˛
+zmian w wielkości wolumenu.
+Spektrum danych, które moga˛ być wykorzystywane na potrzeby konstrukcji
+automatycznych strategii inwestycyjnych jest bardzo szerokie. Oczywiste jest
+wykorzystywanie danych dotyczacych
+˛
+kwotowań rynkowych. Kwotowania dziela˛
+si˛e na informacje dotyczace
+˛ faktycznych transakcji oraz na dane, które dotycza˛
+ofert kupna oraz sprzedaży wraz z ich wolumenami istniejacymi
+˛
+w danej chwili.
+Kolejna˛ grupa˛ sa˛ dane fundamentalne z otoczenia makroekonomicznego, dotyczace
+˛
+danej branży czy sektora oraz dotyczace
+˛ konkretnych podmiotów5 . Czy można
+pokusić si˛e o innego rodzaju dane, które zwi˛ekszałyby wartość prowadzonych
+analiz? Okazuje si˛e, że w obecnych czasach z pomoca˛ przychodza˛ dane z
+serwisów społecznościowych takich jak np. Twitter. Analiza przeprowadzona w
+[Bollen et al., 2011] pokazała, iż informacje dotyczace
+˛ nastrojów użytkowników
+sieci społecznościowych moga˛ być w istotny sposób powiazane
+˛
+z ruchami
+cenowymi indeksów akcyjnych. Nie jest to jednak analiza pozbawiona wyzwań.
+Należałoby w takiej analizie uwzgl˛ednić istotność poszczególnych użytkowników
+sieci. Aby tego dokonać konieczne byłoby zapewnienie reprezentatywnej próby a
+to nie jest trywialne zadanie z punktu widzenia przetwarzania danych, bowiem dane
+Twitter’a rosna˛ dziennie o około 8 TB. Nawet jeśli to wymaganie byłoby spełnione
+5
+
+Jeśli analizie poddawane sa˛ akcje spółek notowanych na giełdzie lub instrumenty pochodne o
+nie oparte
+
+21
+
+Rozdział 1. Wst˛ep
+
+to sam serwis nie udost˛epnia możliwości transferu tak wielkiej ilości danych za
+pośrednictwem publicznie dost˛epnego API. Od czasu badania zamieszczonego w
+[Bollen et al., 2011] upłynał
+˛ już pewien czas. Pojawia si˛e pytanie czy zwi˛ekszona
+konkurencja i rozwój technologii „Big Data” nie wpłynał
+˛ również na zwi˛ekszenie
+efektywności rynków w tym obszarze?
+Dane wykorzystane w niniejszej pracy, to dane dotyczace
+˛ wyłacznie
+˛
+cen
+transakcyjnych agregowanych w okresach dziennych lub 15-sto minutowych6 .
+Wyst˛epuje w nich pi˛eć zmiennych ilościowych i zmienna czasowa reprezentujaca
+˛
+moment zawierania transakcji. Wśród zmiennych ilościowych cztery oznaczaja˛
+cen˛e a jedna wolumen. Wi˛ekszość obliczeń dotyczacych
+˛
+cen aktywa (z
+wykorzystaniem metod omówionych w rozdziale 3.3) jest pochodna˛ w stosunku
+do zmiennych zawierajacych
+˛
+informacj˛e o cenie. Metody te dokonuja˛ dalszych
+agregacji oraz wygładzania majacego
+˛
+na celu łatwiejsza˛ identyfikacj˛e trendów
+oraz redukcj˛e szumu. Zmienna, która cz˛esto bywa zapominana w trakcie analiz
+to wolumen transakcyjny. Dla przykładu wyobraźmy sobie sytuacj˛e, w której
+w ramach rynku wyimaginowanego aktywa nast˛epuja˛ po sobie dwie transakcje.
+Pierwsza zostaje zrealizowana po cenie 100, druga natomiast po cenie 110.
+Czy zasadne jest stwierdzenie, że cena bieżaca
+˛ to 110 (zmiana 10%)? W ten
+sposób zapewne zostanie zaprezentowana informacja w wi˛ekszości serwisów
+informacyjnych. To jednak na co zwróca˛ uwag˛e uważni obserwatory rynku to
+wolumen przy jakim te dwie transakcje zostały zawarte. Jeśli pierwsza z nich
+opiewała na 500 jednostek a kolejna na pi˛eć, uznane to zostanie zapewne za
+chwilowe odchylenie niemajace
+˛ wpływu na cen˛e7 . Jeśli druga transakcja ma
+porównywalna˛ do pierwszej (oraz do potencjalnych wcześniejszych) transakcji
+wartość wolumenu to mamy do czynienia ze zgoła odmienna˛ sytuacja,˛ w której
+6
+
+Dane historyczne dobrej jakości z rynków tradycyjnych, nie poddane agregacji lub dotyczace
+˛
+ksia˛żki zleceń to cz˛esto wydatek rz˛edu dziesiatek
+˛ lub setek tysi˛ecy dolarów.
+7
+Spowodowane np. niska˛ płynnościa˛ danego aktywa
+
+22
+
+Rozdział 1. Wst˛ep
+
+rzeczywiście należałoby doszukiwać si˛e potencjału do permanentnej zmiany ceny
+(np. wskutek publikacji dobrego raportu rocznego).
+
+Rysunek 1.2: Przykładowa trajektoria dziennych notowań cen akcji (u góry) oraz
+towarzyszacy
+˛ im wolumen transakcyjny (u dołu). Zauważalne jest zwi˛ekszenie
+wolumenu towarzyszace
+˛ wi˛ekszym ruchom cenowym.
+Już w okolicy 1900r. Charles Dow8 zauważył, iż trendy potwierdzane sa˛ przez
+wolumen[Murphy, 1999]. Jeden z jego postulatów dotyczacych
+˛
+specyfiki rynków
+brzmiał nast˛epujaco:
+˛
+Jeśli wolumen transakcyjny jest niski, to ruchy cenowe moga˛ być
+objaśniane na wiele sposobów; jeśli wolumen transakcyjny jest
+8
+
+Twórca m.in. The Wall Street Journal oraz indeksu giełdowego Dow Jones Industrial Average
+
+23
+
+Rozdział 1. Wst˛ep
+
+wysoki, to towarzyszace
+˛ mu znaczace
+˛ zmiany ceny odzwierciedlaja˛
+’prawdziwy’ obraz rynku.
+Powyższemu postulatowi zapewne daleko do precyzyjnej matematycznej definicji.
+Jeśli jest prawdziwy, niesie jednak cenna˛ informacj˛e. Jeżeli wartość wolumenu jest
+niska9 teoria Dow’a mówi, iż wolumen nie jest predyktorem przyszłych zmian
+cen. Jeśli wolumen jest wysoki, to według Dow’a można spodziewać si˛e, iż
+towarzyszace
+˛ zmiany ceny oddaja˛ rzeczywista˛ sytuacj˛e rynkowa,˛ czyli sytuacj˛e, w
+której szereg czasowy znajduje si˛e w trendzie rosnacym
+˛
+lub spadkowym. Można
+zatem stwierdzić, poda˛żajac
+˛ za Dow’em, iż same zmiany cen nie opisuja˛ dobrze ich
+przyszłych wartości. Dopiero powiazanie
+˛
+zmian cen z wartościa˛ (oraz dynamika)
+˛
+wolumenu niesie informacj˛e pozwalajac
+˛ a˛ na skuteczna˛ predykcj˛e przyszłych cen
+danego aktywa.
+W 1933 roku [Cowles 3rd, 1933] w prestiżowym journalu Econometrica
+zanegował Teori˛e Dow’a pokazujac,
+˛ iż strategia oparta na zakupie portfela akcja
+i późniejszej jej odsprzedaży (ang. buy&hold strategy) działa znaczaco
+˛ lepiej
+w kategorii stopy zwrotu. W 1998 roku [Brown et al., 1998] pokazał problemy
+z podejściem Cowels’a oraz przeprowadził ponownie symulacje. Wyniki po raz
+kolejny (na oryginalnym zbiorze danych) okazały si˛e być lepsze w kategorii
+stopy zwrotu ale różnica wynosiła zaledwie 2%. To co okazało si˛e istotniejsze to
+fakt, iż stosunek stopy zwrotu do ryzyka mierzony Współczynnikiem Sharpe’a
+był znaczaco
+˛
+wyższy tzn. strategia Dow’a umożliwiała uzyskanie wi˛ekszej
+porównywalnej stopy zwrotu przy znacznie mniejszym ryzyku.
+Powyższe rozważania maja˛ na celu pokazanie, iż analiza cen bez analizy
+wolumenu nie niesie wi˛ekszej wartości. W niniejszej pracy podj˛eto prób˛e pójścia
+krok dalej i wykorzystania krytycznej informacji o wolumenie bezpośrednio
+w jadrze
+˛
+algorytmu uczenia maszynowego tak, aby proces jego uczenia był
+9
+
+Załóżmy na ten moment, iż oznacza to wartości znacznie niższe od pewnej wartości średniej
+
+24
+
+Rozdział 1. Wst˛ep
+
+skoordynowany ze zmianami jego wielkości w czasie.
+
+1.2.2
+
+Teza
+
+Prace analityczne i eksperymentalne pozwoliły na sformułowanie tezy rozprawy w
+nast˛epujacej
+˛ formie:
+Funkcja kary klasyfikatora maszyny wektorów nośnych uwzgl˛edniajaca
+˛
+zależność
+
+funkcyjna˛ od
+
+wolumenu
+
+transakcyjnego
+
+zwi˛eksza
+
+w
+
+statystycznie istotny sposób skuteczność predykcji krótkoterminowych
+trendów dla finansowych szeregów czasowych mierzona˛ wskaźnikami
+dokładności, czułości modelu oraz miara˛ F1, co z kolei przekłada si˛e na
+zwi˛ekszona˛ skuteczność proponowanej strategii inwestycyjnej mierzona˛
+kryterium zysku ekonomicznego oraz ryzyka określonego przez poziom
+maksymalnej procentowej straty.
+
+1.3
+
+Treść pracy
+
+Automatyczny handel aktywami finansowymi wymaga przewidywania kierunków
+zmian cen. W literaturze spotyka si˛e metody zaczerpni˛ete z ekonometrii,
+teorii uczenia maszynowego lub finansów behawioralnych. Cz˛esto algorytmy
+inwestycyjne sa˛ kombinacja˛ technik zaczerpni˛etych z wymienionych dziedzin.
+Dane, na których bazuja,˛ reprezentujace
+˛ finansowe szeregi czasowe, charakteryzuja˛
+si˛e brakiem stabilnego rozkładu. Stanowi to poważne utrudnienie w dokładnym ich
+prognozowaniu. Cz˛esto zamiast dokładnych wartości, próbuje si˛e raczej odgadnać
+˛
+kierunek zmian.
+Jedna˛
+
+z
+
+bardziej
+
+zaawansowanych
+
+metod
+
+uczenia
+
+maszynowego
+
+wykorzystywanych w budowie strategii inwestycyjnych jest klasyfikator maszyna
+wektorów nośnych (ang. support vector machine, SVM). Służy on zarówno do
+25
+
+Rozdział 1. Wst˛ep
+
+rozwiazywania
+˛
+zadań klasyfikacji, jak również, w zmodyfikowanej wersji, regresji.
+W niniejszej pracy proponowana jest nowa funkcja kary, która bazuje na zależności
+wynikajacej
+˛ z teorii finansów pomi˛edzy cena˛ aktywa a wolumenem transakcyjnym.
+Przedstawiona została jej przewaga w stosunku do metod wcześniej opisanych
+w literaturze, w tym do algorytmu bazowego. Klasyfikator wykorzystujacy
+˛
+proponowana˛ funkcj˛e, dla odróżnienia od klasyfikatora bazowego, nazywany jest
+w niniejszej pracy – Volume Weighted Support Vector Machine (VW-SVM).
+Klasyfikator VW-SVM może również znaleźć zastosowanie w innych dziedzinach,
+gdzie w wypadku zadań klasyfikacji wkład każdej z próbek nie jest jednakowy,
+a na podstawie eksperckiej wiedzy jesteśmy w stanie zdefiniować funkcj˛e wag
+przypisana˛ do modelu, która określa istotność poszczególnych przykładów w czasie
+uczenia. W ramach przeprowadzonych eksperymentów rozszerzona została jedna
+z najbardziej rozpowszechnionych implementacji algorytmu SVM – LIBSVM.
+Na potrzeby pracy zostało również opracowane i zrealizowane dedykowane
+automatyczne środowisko testowania strategii inwestycyjnych zaimplementowane
+w j˛ezyku Java. W pracy została opisana przykładowa strategia wykorzystujaca
+˛
+algorytm VW-SVM oraz zostały zaprezentowane i omówione jej wyniki.
+W niniejszej pracy zaproponowana została strategia inwestycyjna b˛edaca
+˛
+kombinacja˛ najlepszych
+
+praktyk
+
+testowania
+
+oraz
+
+walidacji
+
+stosowanych
+
+w przygotowywaniu automatycznie handlujacych
+˛
+algorytmach oraz metod
+charakterystycznych
+
+dla
+
+problematyki
+
+konstrukcji
+
+systemów
+
+uczenia
+
+maszynowego.
+Strategie inwestycyjne konstruowane w oparciu o algorytmy AI wymagaja˛
+dedykowanych metod weryfikujacych
+˛
+ich skuteczność, które uwzgl˛edniaja˛
+specyfik˛e finansowych szeregów czasowych. Klasyczne metody znane z uczenia
+maszynowego sa˛ niewystarczajace.
+˛ W niniejszej pracy pokazane zostały przypadki
+zaczerpni˛ete z literatury pokazujace
+˛ wyniki strategii testowanych w sposób,
+
+26
+
+Rozdział 1. Wst˛ep
+
+który może znaczaco
+˛ pot˛egować zjawisko data snooping’u. W ramach rozprawy
+zaprezentowana została metoda testowania kroczacego
+˛
+(ang. walk forward testing)
+jako zasadniczo zwi˛ekszajaca
+˛ poziom zaufania w stosunku do testowanych strategii,
+b˛edaca
+˛ projekcja˛ walidacji krzyżowej na przypadek analizy szeregów czasowych.
+Na potrzeby selekcji atrybutów wykorzystany został indeks Fisher’a.
+Struktura niniejszej rozprawy jest nast˛epujaca:
+˛
+• W rozdziale pierwszym przedstawiono wprowadzenie do analizy szeregów
+czasowych z użyciem metod uczenia maszynowego. Omówiona została
+istotność konstrukcji funkcji kary dla klasyfikatorów, które wykorzystywane
+sa˛ do analizy danych dynamicznych, jakimi sa˛ np. szeregi czasowe.
+Omówiona
+
+została
+
+Hipoteza
+
+Efektywności
+
+Rynków
+
+Finansowych.
+
+Przedstawiono argumentacj˛e, która bazujac
+˛ na empirycznej obserwacji
+właściwości finansowych szeregów czasowych kwestionuj˛e t˛e hipotez˛e, a
+tym samym potwierdza zasadność przeprowadzania analiz ich dotyczacych.
+˛
+• W rozdziale drugim skupiono si˛e na opisaniu poj˛eć podstawowych
+z punktu widzenia treści dalszej cz˛eści pracy. Znajduje si˛e w nim
+wprowadzenie do problematyki uczenia maszynowego. Szczegółowo opisany
+został klasyfikator jako jedno z głównych narz˛edzi wykorzystywanych w
+omawianych w niniejszej pracy eksperymentach.
+• W rozdziale trzecim omówione zostały metody analiz rynków finansowych.
+Przedstawiono różne koncepcje zaczerpni˛ete z kilku dziedzin nauki.
+Jedna˛ z nich jest wykorzystanie algorytmów uczenia maszynowego jako
+efektywnego narz˛edzia wspierajacego
+˛
+proces decyzyjny. Zdefiniowane
+zostały współczynniki analizy technicznej, które w kolejnych rozdziałach
+służa˛ jako wejście modelu uczacego.
+˛
+• W rozdziale czwartym zaprezentowana została koncepcja proponowanej
+27
+
+Rozdział 1. Wst˛ep
+
+funkcji kary bazujacej
+˛ na zależności funkcyjnej od wolumenu transakcyjnego
+dla klasyfikatora maszyny wektorów nośnych. Zaproponowana została
+również strategia inwestycyjna bazujaca
+˛ na proponowanym klasyfikatorze.
+• W
+
+rozdziale
+
+piatym
+˛
+
+przedstawiono
+
+wyniki
+
+eksperymentów
+
+przeprowadzonych z użyciem zmodyfikowanej wersji klasyfikatora oraz
+przeprowadzono rozważania dotyczace
+˛ statystycznej istotności otrzymanych
+wyników.
+• Rozdział szósty zawiera podsumowanie, zakres dalszych prac, spis literatury,
+tabel oraz rysunków.
+
+28
+
+Rozdział 2
+Terminy podstawowe
+Plurality is not to be posited without
+necessity
+Jan Duns Szkot
+
+2.1
+
+Uczenie maszynowe
+
+Uczenie maszynowe (ang. machine learning) jest samo w sobie dziedzina˛
+interdyscyplinarna.˛ Bazuje na osiagni˛
+˛ eciach takich dziedzin, jak sztuczna
+inteligencja, statystyka, teoria informacji, filozofia, psychologia czy neurobiologia.
+Jedna˛ z wielu wyst˛epujacych
+˛
+w literaturze definicji uczenia si˛e jest ta podana przez
+Mitchell’a ([Mitchell, 1997]):
+O programie komputerowym mówi si˛e, że uczy si˛e na podstawie
+doświadczenia E wykonujac
+˛ zadania T, b˛edac
+˛ ocenianym pewna˛ miara˛
+skuteczności P jeśli jego skuteczność, mierzona przez P wzrasta wraz
+ze wzrostem doświadczenia E.
+Podstawa˛ uczenia dla programu komputerowego, jak podaje powyższa definicja,
+jest doświadczenie E. Najcz˛eściej jest ono zbiorem danych, dla którego
+29
+
+Rozdział 2. Terminy podstawowe
+
+istnieje uzasadnione przypuszczenie, że zbiór ten może pozwolić na uzyskanie
+zadowalajacej
+˛ wartości miary P dla zbioru zdań T.
+Dla efektywności procesu uczenia istotny jest mechanizm otrzymywania
+danych przez program. Istnieje wiele heurystyk, które stosowane sa˛ w zależności
+od konkretnego problemu. W rozdziale 5.2 omówiona została jedna z nich
+charakterystyczna dla analizy szeregów czasowych.
+Innym problemem jest to, czy dane niosa˛ ze soba˛ informacj˛e, która pozwala
+na bezpośrednia˛ ocen˛e poszczególnych przypadków za pomoca˛ miary P. Jeśli tak
+nie jest, wówczas zadanie staje si˛e trudniejsze, a moment oceny jest przesuni˛ety
+w czasie. Kolejna,˛ jednak wcale nie mniej ważna˛ kwestia,˛ jest reprezentatywność
+danego zbioru E. Mówiac
+˛ precyzyjnie, najbardziej pożadane
+˛
+jest aby zbiór danych
+składajacych
+˛
+si˛e na doświadczenie E reprezentował ten sam rozkład co zbiór
+danych w czasie wykorzystywania programu w przyszłości. W praktyce to ostatnie
+założenie leży u podstaw wi˛ekszości algorytmów uczenia maszynowego. Jest ono
+jednak cz˛esto niespełnione, a fakt ten znaczaco
+˛ utrudnia lub nawet uniemożliwia
+budow˛e modeli opartych o t˛e klas˛e algorytmów.
+Wprowadzajac
+˛ bardziej formalny zapis możemy powiedzieć, iż doświadczenie
+reprezentowane jest przez pewien zbiór przykładów reprezentowany przez macierz
+X o wymiarach N xM , gdzie N to liczba przykładów stanowiacych
+˛
+doświadczenie
+E, a M jest liczba˛ cech identyczna˛ dla każdego z przykładów. Zbiór ten nazywamy
+zbiorem danych trenujacych
+˛
+(ang. training set). Zakładamy tutaj, że wartość cechy
+xij jest liczba˛ rzeczywista.˛ Wartości cech oczywiście nie zawsze sa˛ liczbami
+rzeczywistymi, dlatego w wi˛ekszości wypadków konieczne jest przeprowadzenie
+odpowiedniej transformacji polegajacej
+˛
+na zamianie danych w reprezentacji
+symbolicznej (np. liczba, płeć, rating reprezentowany przez kolejne litery alfabetu)
+na postać liczbowa.˛
+Zbiór trenujacy
+˛ może zawierać szereg nieefektywności polegajacych
+˛
+np. na
+
+30
+
+Rozdział 2. Terminy podstawowe
+
+wyst˛epowaniu obserwacji nietypowych różniacych
+˛
+si˛e znaczaco
+˛ od pozostałych
+(ang. outliers) lub braku wartości pewnych cech dla niektórych przykładów w
+macierzy X. Wi˛ekszość algorytmów nie jest przystosowana do automatycznego
+radzenia sobie z tego rodzaju anomaliami. Cz˛esto konieczne jest przeprowadzenie
+odpowiednich przekształceń. W wypadku obserwacji nietypowych może być to
+przeprowadzenie procesu normalizacji lub odrzucenie odstajacych
+˛
+przykładów.
+Problem luk w danych trenujacych
+˛
+może zostać rozwiazany
+˛
+np. przez uśrednianie
+wartości sasiednich.
+˛
+Jak wynika z definicji zadanie uczenia maszynowego polega na iteracyjnym
+poprawianiu skuteczności miary P dla wykonywanych zadań T. Można je
+sprowadzić do nauczenia si˛e pewnej funkcji wyboru najlepszego rozwiazania
+˛
+postaci f (e ∈ E) → T. W tej formie konstrukcja funkcji f mogłaby być
+kłopotliwa ze wzgl˛edu na moment oceny rozwiazania
+˛
+i porównywanie decyzji
+systemu uczacego
+˛
+si˛e w kolejnych krokach. Okazuje si˛e, że dużo lepiej zastosować
+funkcj˛e postaci f 0 (e ∈ E) → R, której rzeczywiste wartości wykorzystane
+moga˛ być do porównywania wyników w poszczególnych krokach uczenia. Ocena
+konkretnego modelu przebiega w oparciu o ocen˛e bł˛edu jaki jest przez niego
+popełniany. Jedna˛ z najcz˛eściej używanych miar jest bład
+˛ średniokwadratowy, który
+ma postać:
+E=
+
+1 X 0
+(f (e) − f 0¯(e))2 ,
+N
+
+(2.1)
+
+gdzie f 0¯(e) jest wartościa˛ poszukiwanej przez nasz model funkcji f , a f 0 (e) oznacza
+wartość docelowa˛ podana˛ w zbiorze trenujacym.
+˛
+Okazuje si˛e wi˛ec, że zadanie
+uczenia maszynowego sprowadza si˛e do rozwiazania
+˛
+problemu optymalizacyjnego
+postaci:
+min E,
+
+w∈Hn
+
+(2.2)
+
+gdzie w jest wektorem parametrów modelu zdefiniowanym w pewnej przestrzeni
+Hn . Esencja˛ algorytmu uczenia maszynowego jest znalezienie rozwiazania
+˛
+31
+
+Rozdział 2. Terminy podstawowe
+
+pozwalajacego
+˛
+na uwolnienie minimalnej liczby parametrów przy jednoczesnym
+zachowaniu wysokiej skuteczności mierzonej przez P. Im mniejsza liczba
+parametrów potrzebnych do wyznaczenia wartości funkcji f tym algorytm cechuje
+si˛e lepsza˛ zdolnościa˛ do generalizacji a wi˛ec osiagania
+˛
+wysokiej skuteczności dla
+przykładów, które nie znalazły si˛e w zbiorze treningowym. Minimalizacja liczby
+wolnych parametrów przeciwdziała zjawisku nadmiernego dopasowania do danych
+(ang. overfitting), które jest zaprzeczeniem zdolności generalizacji. W kolejnych
+rozdziałach problem generalizacji wyników jest szerzej opisany w kontekście
+klasyfikatora SVM.
+Problem optymalizacyjny 2.2 nie zawiera w sobie informacji dotyczacej
+˛
+złożoności f . Oprócz minimalizacji rozmiaru przestrzeni parametrów Hn
+można wskazać jeszcze jedna˛ metod˛e, która pozwala na ograniczenie zjawiska
+nadmiernego dopasowania. Jest nia˛ wprowadzenie parametru regularyzacyjnego,
+który przeciwdziała przyjmowaniu przez funkcj˛e f zbyt złożonych form. Dla
+rodzin klasyfikatorów liniowych jest to np. ograniczenie wielkości wag dla
+poszczególnych składowych wektora uczacego.
+˛
+I tak problem optymalizacyjny 2.2
+przyjmuje nast˛epujac
+˛ a˛ postać:
+min E + λR(f ),
+
+w∈Hn
+
+(2.3)
+
+gdzie R(f ) jest funkcja˛ określajac
+˛ a˛ wielkość kary za zbyt wysoki poziom
+złożoności funkcji f a λ jest parametrem określajacym
+˛
+wielkość współczynnika
+kary. Im wi˛eksza wartość współczynnika λ tym bardziej w procesie optymalizacji
+preferowane b˛eda˛ hipotezy prostsze, niekoniecznie charakteryzujace
+˛
+si˛e
+najmniejsza˛ wartościa˛ bł˛edu na zbiorze trenujacym.
+˛
+O takich modelach mówi
+si˛e, że sa˛ to modele posiadaja˛ wysoki bias (ang. high bias models), czyli zachodzi
+zjawisko zbyt małego dopasowania (ang. underfitting). Cz˛estokroć zamiast 2.3
+
+32
+
+Rozdział 2. Terminy podstawowe
+
+Rysunek 2.1: Klasyfikacja binarna - wyznaczanie granicy decyzyjnej, różne
+warianty złożoności modelu klasyfikacyjnego. Lewy rysunek - model posiadajacy
+˛
+wysoki bias, prawy - model charakteryzujacy
+˛ si˛e wysoka˛ wariancja,˛ środkowy granica decyzyjna b˛edaca
+˛ kompromisem pomi˛edzy modelami ze zbyt wysokim oraz
+zbyt niskim dopasowaniem.
+używa si˛e nast˛epujacej
+˛ formuły dla zadania optymalizacyjnego:
+min CE + R(f ),
+
+w∈Hn
+
+(2.4)
+
+gdzie C określa wysokość kary za bład
+˛ i jest proporcjonalne do odwrotności
+współczynnika λ tj. C ≈
+
+1
+.
+λ
+
+Im wi˛eksza wartość parametru C tym bardziej
+
+w procesie optymalizacji b˛eda˛ preferowane złożone hipotezy tak, aby osiagn
+˛ ać
+˛
+jak najlepszy stopień dopasowania do danych. O takich modelach mówi si˛e, że
+charakteryzuja˛ si˛e wysoka˛ wariancja˛ (ang. high variance models), czyli zachodzi
+zjawisko nadmiernego dopasowania (ang. overfitting). Jednym z głównych zadań
+w czasie konstrukcji modeli uczenia maszynowego jest znalezienie kompromisu
+mi˛edzy nadmiernym a zbyt małym dopasowaniem, czyli właściwy wybór
+parametrów regularyzujacych
+˛
+(ang. bias-variance trade-off).
+Na Rysunku 2.1 zilustrowana jest koncepcja osiagania
+˛
+kompromisu w
+złożoności modelu dla przykładu klasyfikatora binarnego.
+Opisana tutaj definicja uczenia maszynowego odnosi si˛e do grupy algorytmów,
+które z uwagi na metod˛e działania nazywane sa˛ uczeniem z nadzorem (ang.
+supervised learning). Jest to metoda uczenia poj˛eć (ang. concept learning), która
+33
+
+Rozdział 2. Terminy podstawowe
+
+stara si˛e odnaleźć funkcj˛e realizujac
+˛ a˛ obserwowane przyporzadkowanie.
+˛
+Dla
+zachowania kompletności opisu należy zaznaczyć, że nie jest to jedyna forma
+uczenia maszynowego. Innym typem jest uczenie bez nadzoru (ang. unsupervised
+learning), którego zadaniem jest poznanie ukrytej reprezentacji w danym zbiorze
+danych.
+
+2.2
+
+Maszyny wektorów nośnych
+
+Vapnik i Chervonenkis opisali zasad˛e minimalizacji ryzyka strukturalnego (ang.
+structural risk minimization principle). Podejście to było całkowicie nowatorskie
+– podkreślało wag˛e minimalizacji bł˛edu algorytmów uczenia maszynowego na
+zbiorach testowych. Vapnik i Chervonenkis pokazali, że wraz ze wzrostem
+złożoności modelu statystycznego bład
+˛ na zbiorze testowym rośnie. Mimo, iż
+konstruowany model jest w stanie dopasować si˛e do danych trenujacych,
+˛
+jego
+dokładność dla nieznanych wcześniej danych rośnie. Górna granica bł˛edu Rf na
+zbiorze testowym dla danego modelu jest zdefiniowana z prawdopodobieństwem
+1 − η w nast˛epujacy
+˛ sposób:
+Rf ≤ Remp + φ(
+
+h log(η)
+,
+),
+m m
+
+(2.5)
+
+gdzie Remp jest bł˛edem empirycznym zaobserwowanym na zbiorze trenujacym
+˛
+w
+procesie uczenia modelu a φ jest miara˛ pojemności modelu zdefiniowana˛ jako:
+v
+u
+u h(log( 2m + 1)) − log( η )
+t
+h log(η)
+h
+4 ,
+φ( ,
+)=
+m m
+m
+
+(2.6)
+
+gdzie m jest liczba˛ przykładów w zbiorze trenujacym,
+˛
+h jest wymiarem
+Vapnika–Chervonenkisa zdefiniowanym w nast˛epujacy
+˛ sposób [Mitchell, 1997]:
+
+34
+
+Rozdział 2. Terminy podstawowe
+
+Wymiar Vapnik’a i Chervonenkis’a (ang. VC dimension) h dla pewnej
+przestrzeni hipotez H zdefiniowanym dla pewnego zbioru przykładów
+X jest rozmiarem najwi˛ekszego z podzbiorów w X, którego elementy
+moga˛ być podzielone przez H na pozytywne i negatywne. Jeśli
+dowolnie duży, skończony podzbiór H może być podzielony przez H
+wówczas h = ∞
+Ogólnie dla przypadku podziału przestrzeni n–wymiarowej Rn hiperpłaszczyznami
+h = n + 1. W SVM jako granic˛e decyzyjna˛ przyjmuje si˛e hiperpłaszczyzn˛e
+zdefiniowana˛ w pewnej przestrzeni cech:
+wT x + b = 0.
+
+(2.7)
+
+Funkcja decyzyjna jest wówczas określona jako:
+f (x) = sgn(wT x + b)
+
+(2.8)
+
+Znalezienie optymalnej hiperpłaszczyzny maksymalizujacej
+˛ margines prowadzi do
+zmniejszania złożoności modelu, co zostało pokazane w [Burges, 1998]. Margines
+M przedstawiony na rysunku 2.2 wynosi
+
+2
+||w||
+
+a wi˛ec jego maksymalizacj˛e można
+
+sprowadzić do rozwiazania
+˛
+nast˛epujacego
+˛
+problemu optymalizacyjnego:
+1
+||w||2
+w∈H,b∈R 2
+min
+
+dla
+
+yi (wT x + b)) >= 1
+
+(2.9)
+
+i = 1, .., m.
+
+(2.10)
+
+W wypadku, gdy klasy nie sa˛ liniowo separowalne wprowadzana jest dodatkowa
+zmienna swobodna ξ, która pozwala na naruszenie warunku (2.10). Dodatkowo dla
+omawianego problemu definiowana jest stała C analogiczna do tej z wyrażenia 2.4,
+35
+
+Rozdział 2. Terminy podstawowe
+
+Rysunek 2.2: Klasyfikacja metoda˛ SVM
+która warunkuje zachowanie kompromisu pomi˛edzy maksymalizacja˛ marginesu
+a bł˛edna˛ klasyfikacja˛ wynikajac
+˛ a˛ z natury danych. Zadanie optymalizacyjne
+sformułowane jest nast˛epujaco:
+˛
+m
+
+X
+1
+min
+||w||2 + C
+ξi
+w∈H,b∈R 2
+i
+dla
+
+yi (wT x + b)) >= 1 − ξi
+
+i = 1, .., m
+
+(2.11)
+
+ξi >= 0,
+
+gdzie ξi oznacza zmienna˛ dopełniajac
+˛ a˛ (ang. slack variable), która określa stopień
+bł˛edu klasyfikacji.
+
+36
+
+Rozdział 2. Terminy podstawowe
+
+Problemy zdefiniowane w (2.9) oraz (2.11) rozwiazuje
+˛
+si˛e wprowadzajac
+˛
+współczynniki αi >= 0 oraz definiujac
+˛ funkcj˛e Lagrange’a:
+m
+
+X
+1
+αi (yi (wT x + b) − 1)
+L(w, α, b) = ||w||2 −
+2
+i
+przy czym dla (2.11) wyst˛epuje dodatkowe ograniczenie αi
+
+(2.12)
+
+<=
+
+C. Po
+
+odpowiednich przekształceniach sprowadzamy problem (2.9) oraz (2.11) do
+maksymalizacji wyrażenia:
+
+max W (α) =
+α
+
+m
+X
+i
+
+1
+αi − αi αj yi yj k(xi , xj )
+2
+
+(2.13)
+
+uzyskujac
+˛ funkcj˛e decyzyjna˛ postaci:
+
+f (x) = sgn(
+
+m
+X
+
+yi αi k(x, xi ) + b),
+
+(2.14)
+
+i=1
+
+gdzie k jest funkcja˛ jadrow
+˛
+a˛ (ang. kernel function), która przekształca dane
+wejściowe do nowej przestrzeni cech. Czasami przekształcenie to nosi nazw˛e
+„triku jadrowego”
+˛
+(ang. kernel trick). Pozwala na poszukiwania rozwiazania
+˛
+w
+przestrzeni o wyższym wymiarze, redukujac
+˛ złożoność obliczeń. Stosowane jest
+do znajdowania granic decyzyjnych w wyżej wymiarowych przestrzeniach w
+wypadku, gdy w pierwotnej przestrzeni cech problem nie jest liniowo separowalny.
+Rozszerzenie metody SVM dla zadania regresji realizowane jest przez
+wprowadzenie funkcji straty:
+|f (xi ) − yi | = max{0, |f (xi ) − yi | − }
+
+(2.15)
+
+Wprowadzone zostaja˛ dwie nowe zmienne swobodne ξi , ξi∗ >= 0. Dzi˛eki ich
+zastosowaniu model karany jest za bł˛edna˛ predykcj˛e zarówno dla dodatnich,
+
+37
+
+Rozdział 2. Terminy podstawowe
+
+jak i ujemnych odchyleń. Podobnie jak w wypadku klasyfikacji o kompromisie
+pomi˛edzy ogólnościa˛ rozwiazania
+˛
+a bł˛edem na zbiorze trenujacym
+˛
+decyduje stała
+C. Zadanie optymalizacyjne zdefiniowane jest nast˛epujaco:
+˛
+m
+
+X
+1
+||w||2 + C
+(ξi + ξi∗ )
+w∈H,b∈R 2
+i
+min
+
+(2.16)
+
+przy ograniczeniach:
+dla
+
+f (xi ) − yi <=  + ξi
+
+(2.17)
+
+yi − f (xi ) <=  + ξi∗
+
+(2.18)
+
+ξi , ξi∗ >= 0.
+
+(2.19)
+
+Nast˛epnie podobnie jak w przypadku klasyfikacji korzystajac
+˛ z metody mnożników
+Lagrange’a definiujemy oraz rozwiazujemy
+˛
+zadania dualne.
+
+38
+
+Rozdział 3
+Finansowe szeregi czasowe
+It is a capital mistake to theorise
+before one has data.
+Arthur Conan Doyle
+
+3.1
+
+Charakterystyka finansowych szeregów
+czasowych
+
+Naukowcy, analitycy oraz inwestorzy, którzy zajmuja˛ si˛e finansowymi szeregami
+czasowymi analizuja˛ je wieloma odmiennymi od siebie metodami. W ogólności
+tego rodzaju analizy moga˛ być podzielone na dwie grupy, które charakteryzuja˛
+si˛e diametralnie odmiennym podejściem do tegoż zagadnienia. I tak, jako
+pierwsza˛ grup˛e należałoby wymienić metody ilościowe i statystyczne, tj.
+modelowanie ekonometryczne oraz matematyczne, stosowanie algorytmów uczenia
+maszynowego lub analiz˛e techniczna,˛ które biora˛ zwykle pod uwag˛e wyłacznie
+˛
+bazowy szereg. Z drugiej strony mamy do czynienia z grupa˛ metod, które staraja˛
+si˛e spojrzeć na przedmiot analiz w uj˛eciu zdecydowanie bardziej holistycznym,
+z szerszej perspektywy, czyli np. analizuja˛ otoczenie gospodarcze, sentyment
+39
+
+Rozdział 3. Finansowe szeregi czasowe
+
+inwestorów oraz inne czynniki, które nie zawsze moga˛ być w bezproblemowy
+sposób zmierzone. W niniejszej pracy uwaga poświ˛econa zostanie pierwszej grupie
+metod.
+W rozdziale 1.1 opisana została koncepcja efektywności rynków finansowych.
+W sposób empiryczny zostały również przedstawione argumenty przemawiajace
+˛ za
+nieprawdziwościa˛ tej hipotezy. W niniejszym rozdziale właściwości finansowych
+szeregów czasowych zostana˛ omówione precyzyjnie.
+Ogólnie szereg czasowy definiowany jest w nast˛epujacy
+˛ sposób:
+Szeregiem czasowym X nazywamy realizacj˛e procesu
+stochastycznego, którego dziedzina˛ jest czas. Poszczególne elementy
+szeregu zapisywane sa˛ jako Xt , gdzie t jest indeksem ze zbioru
+indeksujacego
+˛
+T.
+W niniejszej pracy badane sa˛ finansowe szeregi czasowe, które reprezentowane
+sa˛ przez notowania akcji lub notowania waluty bitcoin. Podobne rozważania
+można jednak przeprowadzić dla notowań na tradycyjnych rynkach walutowych,
+dla instrumentów pochodnych takich jak opcje czy kontrakty terminowe. W pracy
+[Sewell, 2011] zebrano i w wyczerpujacy
+˛ sposób opisano właściwości finansowych
+szeregów czasowych.
+W wypadku finansowych szeregów czasowych analizie poddawane sa˛
+bezpośrednio wartości z poszczególnych chwil czasu jak również szeregi pochodne,
+tworzone w oparciu o szereg bazowy. Przykładem może być tutaj szereg stóp
+zwrotów
+
+Xt
+,
+Xt−1
+
+szereg bezwzgl˛ednych stóp zwrotu
+
+|Xt |
+|Xt−1 |
+
+czy logarytmy tych
+
+szeregów. Przekształcenia tego rodzaju cz˛esto pozwalaja˛ na uproszczenie obliczeń
+oraz umożliwiaja˛ bezpośrednia˛ interpretacj˛e poszczególnych wartości danego
+szeregu.
+W rozdziale 1.1, porównujac
+˛ proces białego szumu oraz przykładowego
+szeregu czasowego pochodzacego
+˛
+z notowań polskiej giełdy stwierdzono, iż
+40
+
+Rozdział 3. Finansowe szeregi czasowe
+
+proces białego szumu jest stacjonarny czyli posiada stała˛ w czasie wariancj˛e
+oraz wartość oczekiwana.˛ Dokładna definicja stacjonarności określona jest w
+nast˛epujacy
+˛ sposób:
+O szeregu czasowym X mówimy, że jest stacjonarny jeśli dla
+dystrybuanty FX rozkładu prawdopodobieństwa szeregu Xt w
+momentach t1 + τ, . . . tk + τ zachodzi nast˛epujaca
+˛ równość:
+∀k, ∀τ, ∀t1 . . . tk
+
+FX (xt1+τ . . . xtk+τ ) = FX (xt1 . . . xtk )
+
+Fakt, iż finansowe szeregi czasowe1 w znakomitej wi˛ekszości nie spełniaja˛
+powyższej definicji w znaczacy
+˛ sposób utrudnia ich analiz˛e. W szczególności
+wi˛ekszość metod ekonometrycznych zaprezentowanych w kolejnym podrozdziale
+bazuje na stacjonarności bazowego szeregu. W wypadku metod, które zakładaja˛
+uzyskanie stacjonarości (np. w wyniku różnicowania bazowego szeregu) tak jak
+to zostało pokazane w przykładzie z białym szumem oraz indeksem giełdowym
+finalny szereg nie zawsze jest stacjonarny a przez to nie zawsze spełnia warunki
+modelu.
+
+3.2
+
+Wybrane metody analiz rynków finansowych
+
+Dwiema głównymi metodami analiz rynków finansowych sa˛ analiza fundamentalna
+oraz analiza techniczna. Pierwsza z nich wykorzystuje wskaźniki makro i
+mikroekonomiczne w celu obliczenia wartości wewn˛etrznej poszczególnych
+aktywów. Druga oparta jest o teori˛e Dowa, która mówi m.in., iż historyczne szeregi
+cen aktywów finansowych dyskontuja˛ wszystkie inne informacje i sa˛ tym samym
+wystarczajace
+˛ do pełnej analizy ([Teixeira, 2010], [Murphy, 1999]).
+Inna˛ grupa˛ metod jest analiza ekonometryczna b˛edaca
+˛ podejściem ilościowym,
+znacznie bardziej sformalizowanym, opartym na solidnych matematycznych
+1
+
+W szczególności mowa tu o szeregach czasowych pochodzacych
+˛
+z rynków finansowych.
+
+41
+
+Rozdział 3. Finansowe szeregi czasowe
+
+fundamentach. Stosowana jest do przewidywania ruchów cenowych, zmienności,
+jak również wykorzystywana jest w arbitrażu statystycznym. Przykłady tych metod
+to:
+1. AR(ang. autoregressive model) - model autoregresyjny, zakłada, że bieżaca
+˛
+wartość zmiennej losowej Xt w chwili t jest zależna od jej poprzednich
+realizacji powi˛ekszona o składnik białego szumu t :
+
+Xt = α +
+
+p
+X
+
+αi Xt−i + t
+
+(3.1)
+
+i=1
+
+2. MA(ang. moving average model) - model średniej kroczacej,
+˛
+zakłada, że
+bieżaca
+˛ wartość zmiennej losowej Xt w chwili t jest równa aktualnej
+wartości średniej szeregu skorygowanej o wartości szeregu białego szumu:
+
+Xt = µ +
+
+q
+X
+
+t−i
+
+(3.2)
+
+i=1
+
+3. ARMA(ang. autoregressive moving average model) - złożenie modeli AR
+oraz MA
+Xt = c +
+
+q
+X
+
+θi Xt−i +
+
+i=1
+
+p
+X
+
+αi Xt−i + t
+
+(3.3)
+
+i=1
+
+4. ARIMA(ang. autoregressive integrated moving average model) - uogólnienie
+modelu ARMA dla przypadków, w których bazowy szereg jest
+niestacjonarny. Stacjonarność lub słaba˛ stacjonarność szeregu uzyskuje si˛e
+przez wprowadzenie operacji różnicowania (np. dla szeregów giełdowych
+prezentowanych na 1.1).
+5. ARCH (ang. auto-regressive conditional heteroskedasticity model) - model
+zaproponowany przez Roberta Engle’a w 1982, za który w roku 2003
+otrzymał Nagrod˛e Nobla. Bazuje na spostrzeżeniu, że wariancja składnika
+42
+
+Rozdział 3. Finansowe szeregi czasowe
+
+losowego w modelu autoregresji dla szeregów finansowych zależy od jej
+poprzednich wartości. Własność heteroskedastyczności szeregów
+finansowych oznacza, iż poszczególne wartości wariancji zmiennych
+losowych różnia˛ si˛e od siebie lub ich wariancja jest nieskończona. Co wi˛ecej
+dla omawianej klasy szeregów zachodzi własność grupowania wariancji, tj.
+okresy niskiej zmienności przeplatane sa˛ z okresami wysokiej zmienności.
+Przykład tej cechy zilustrowany jest na rysunku 1.1. Definiujac
+˛ prosty model
+regresji:
+y = µ + xt β + εt ,
+
+(3.4)
+
+dla przypadku braku wyst˛epowania efektu ARCH wariancja reszty
+generowana jest z rozkładu normalnego εt ∼ N (0; 1). W wypadku kiedy
+zachodzi efekt ARCH reszty modelu posiadaja˛ zmienna˛ w czasie wariancj˛e,
+która zależna jest od ich poprzednich realizacji, czyli εt ∼ N (0; σt ).
+Wariancja σt jest obliczana za pomoca˛ pomocniczego równania regresji
+P
+σt = α0 + pi=1 αi t−1 . Jeśli co najmniej jeden ze współczynników αt dla
+t >= 1 jest niezerowy możemy przyjać
+˛ wyst˛epowanie efektów ARCH.
+
+3.3
+
+Wskaźniki analizy technicznej
+
+W rozdziale 3.2 opisane zostały metody analiz rynków finansowych. Na
+potrzeby niniejszej pracy wybrano grup˛e wskaźników analizy technicznej
+jako dane wejściowe dla modelu b˛edacego
+˛
+podstawa˛ strategii inwestycyjnej.
+Każdy z prezentowanych poniżej wskaźników jest definiowany razem z pewna˛
+reguła˛ transakcyjna,˛ która jest budowana na podstawie wiedzy i doświadczenia
+uczestników rynku finansowego. W wypadku konstrukcji strategii inwestycyjnej
+opartej o algorytm uczenia maszynowego tego rodzaju reguła jest budowana jako
+wynik procedury optymalizacyjnej.
+
+43
+
+Rozdział 3. Finansowe szeregi czasowe
+
+Wszystkie wskaźniki obliczane sa˛ na podstawie danych postaci: {cena otwarcia,
+cena maksymalna, cena minimalna, cena zamkni˛ecia} dla przyj˛etego okresu
+agregacji danych. W nomenklaturze finansowej tego rodzaju dane nazywa si˛e
+„świecami” (ang. candlesticks ) z uwagi na ich kształt na wykresie ceny w
+poszczególnych chwilach czasowych. W niniejszej pracy przyj˛eto okres agregacji
+wynoszacy
+˛ 1 dzień. Wartości PtO , PtH , PtL and PtC oznaczaja˛ odpowiednio cen˛e
+otwarcia, maksymalna,˛ minimalna˛ oraz zamkni˛ecia dla momentu t, który obejmuje
+okres (t − 1; ti.
+
+3.3.1
+
+Average True Range
+
+Wskaźnik Average True Range mierzy zmienność ceny w pewnym przedziale
+czasowym (ilustracja na rysunku 3.1). Jego prosta konstrukcja bazuje na wskaźniku
+True Range, który mierzy maksymalna˛ różnic˛e w wartości pomi˛edzy kolejnymi
+wartościami cen:
+Wskaźnikiem True Range w chwili t oznaczanym T Rt nazywamy
+obliczona˛ dla szeregu czasowego cen aktywa finansowego
+maksymalna˛ wartość z trzech różnic: pomi˛edzy cena˛ maksymalna˛ a
+minimalna˛ w chwili t, pomi˛edzy cena˛ maksymalna˛ w chwili t a cena˛
+zamkni˛ecia w chwili t − 1 oraz pomi˛edzy cena˛ minimalna˛ z chwili t a
+cena˛ zamkni˛ecia w chwili t − 1 dana˛ wzorem:
+C
+C
+}.
+, PtL − Pt−1
+T Rt = max{PtH − PtL , PtH − Pt−1
+
+(3.5)
+
+Wskaźnik Average True Range w chwili t o długości n oznaczanym
+AT Rtn nazywamy obliczona˛ dla szeregu czasowego cen aktywa
+finansowego n-dniowa˛ średnia˛ arytmetyczna˛ wskaźnika T R z
+
+44
+
+Rozdział 3. Finansowe szeregi czasowe
+
+ostatnich n opóźnień w stosunku do chwili t zgodnie ze wzorem:
+n
+
+AT Rtn
+
+1X
+=
+T Rt−i .
+n i=0
+
+(3.6)
+
+Rysunek 3.1: Przykład graficznej reprezentacji wskaźnika ATR (o n = 100 dni) oraz
+wskaźnika RSI (o n = 30 dni) wykreślonym w narz˛edziu analizy technicznej.
+ATR jest uważany za lepszy wyznacznik zmienności rynkowej w stosunku
+do zwykłej wartości odchylenia standardowego, ponieważ w swojej konstrukcji
+45
+
+Rozdział 3. Finansowe szeregi czasowe
+
+używa również informacji dotyczacych
+˛
+zmian cen, które pochodza˛ z notowań
+udost˛epnianych w czasie sesji rynkowej (ang. intraday data) ([Gustafson, 2001])
+
+3.3.2
+
+Vortex Indicator
+
+Wskaźnik Vortex jest wskaźnikiem kierunku trendu. Zakłada, że indywidualne
+relacje mi˛edzy kolejnymi kwotowaniami moga˛ dostarczać informacji na temat
+kierunku trendu [Botes and Siepman, 2010]. Wskaźnik Vortex składana si˛e z dwóch
+wartości V (+) i V (−) , które oznaczaja˛ odpowiednio pozytywne oraz negatywne
+zmiany kierunku trendu i sa˛ zdefiniowane w nast˛epujacy
+˛ sposób:
+Dodatnim wskaźnikiem Vortex w chwili t o długości n oznaczanym
+n(+)
+
+Vt
+
+nazywamy obliczony dla szeregu czasowego cen aktywa
+
+finansowego iloraz sumy różnic cen maksymalnej i minimalnej w
+momentach od t − n do t oraz sumy wartości wskaźnika True Range z
+zakresu od t − n do t wyrażony wzorem:
+n(+)
+Vt
+
+Pn
+L
+(P H − Pt−k
+)
+Pn t−k
+= k=0
+,
+k=0 T Rt−k
+
+(3.7)
+
+gdzie n oznacza liczb˛e agregatów przypadajacych
+˛
+na okres, w
+stosunku do którego liczony jest wskaźnik.
+Ujemnym wskaźnikiem Vortex w chwili t o długości n oznaczanym
+n(−)
+
+Vt
+
+nazywamy obliczony dla szeregu czasowego cen aktywa
+
+finansowego iloraz sumy różnic cen minimalnej i maksymalnej w
+momentach od t − n do t oraz sumy wartości wskaźnika True Range z
+zakresu od t − n do t wyrażony wzorem:
+n(−)
+Vt
+
+Pn
+H
+(P L − Pt−k
+)
+Pn t−k
+= k=0
+,
+k=0 T Rt−k
+46
+
+(3.8)
+
+Rozdział 3. Finansowe szeregi czasowe
+
+gdzie n oznacza liczb˛e agregatów przypadajacych
+˛
+na okres, w
+stosunku do którego liczony jest wskaźnik.
+
+3.3.3
+
+On-Balance Volume
+
+W [Davies, 2004] wskaźnik On–Balance Volume został opisany jako wskaźnik
+momentum, który odzwierciedla zależność pomi˛edzy zmiana˛ ceny a wolumenem
+transakcyjnym (ilustracja na rysunku 3.2).
+Wskaźnikiem On–Balance Volume w chwili t oznaczanym OBVt
+nazywamy obliczona˛ dla szeregu czasowego cen aktywa finansowego
+sum˛e skumulowanego wolumenu transakcyjnego od chwili t = 00 do
+chwili t wyrażona˛ wzorem:
+
+
+
+
+OBVt−1 + Vt
+
+
+
+OBVt = OBVt−1 − Vt
+
+
+
+
+
+OBVt−1
+
+if Pt > Pt−1
+if Pt < Pt−1 ,
+
+(3.9)
+
+if Pt = Pt−1
+
+gdzie Vt jest wolumenem transakcyjnym dla momentu t oraz
+OBV0 = V0 .
+Kiedy OBV rośnie (spada) oznacza to nie tylko wzrost (spadek) ceny danego
+aktywa ale wskazuje również na fakt, iż proporcjonalnie wi˛ekszy kapitał jest
+zaangażowany w ten ruch cenowy. Ponadto, nawet znaczace
+˛ zmiany ceny nie
+potwierdzone zmiana˛ wartości wolumenu nie maja˛ wpływu na wartość wskaźnika
+OBV .
+
+47
+
+Rozdział 3. Finansowe szeregi czasowe
+
+Rysunek 3.2: Przykład graficznej reprezentacji wskaźnika OBV wykreślonym w
+narz˛edziu analizy technicznej.
+
+3.3.4
+
+Oscylator Williams’a
+
+Oscylator Williams’a wyraża odchylenie szeregu czasowego cen danego aktywa
+od jego maksymalnej wartości w zadanym horyzoncie czasowym (ilustracja na
+rysunku 3.3). Wskazuje na momenty wyprzedania lub wykupienia na rynku danego
+aktywa. Jest zdefiniowany w nast˛epujacy
+˛ sposób:
+Wskaźnikiem Oscylator Williams’a w chwili t od długości n
+48
+
+Rozdział 3. Finansowe szeregi czasowe
+
+oznaczanym %Rtn nazywamy obliczony dla szeregu czasowego cen
+aktywa finansowego iloraz różnicy maksymalnej ceny z zakresu od
+t − n do t i ceny aktywa w chwili t oraz różnicy maksymalnej i
+minimalnej wartości cen w zakresie od t − n do t danego wzorem:
+%Rtn
+
+M axPtn − Pt
+= 100
+,
+M axPtn − M inPtn
+
+(3.10)
+
+gdzie
+M axPtn = max{Pt , Pt−1 , . . . , Pt−n }
+oraz
+M inPtn = min{Pt , Pt−1 , . . . , Pt−n }
+.
+
+3.3.5
+
+Relative strength index
+
+Relative Strength Index jest wskaźnikiem typu momentum, który w swoich
+założeniach ma pomóc w określeniu kiedy cena danego aktywa znajduje
+si˛e
+
+w
+
+okolicach
+
+maksimum
+
+(minimum)
+
+danego
+
+trendu
+
+wzrostowego
+
+(spadkowego)[Faber, 1994] (ilustracja na rysunku 3.1) .
+Wskaźnikiem Relative Strength Index w chwili t od długości n
+oznaczanym RSItn nazywamy obliczone dla szeregu czasowego cen
+aktywa finansowego wyrażenie postaci:
+RSItn = 100 −
+
+100
+,
+1 + RStn
+
+gdzie RStn jest relacja˛ dodatnich oraz ujemnych wartości cen
+
+49
+
+(3.11)
+
+Rozdział 3. Finansowe szeregi czasowe
+
+Rysunek 3.3: Przykład graficznej reprezentacji wskaźnika %R wykreślonym w
+narz˛edziu analizy technicznej.
+zamkni˛ecia zdefiniowanym jako:
+RStn
+
+Pn
+Ut
+= Pnt=0 .
+t=0 Dt
+
+Ut i Dt oznaczaja˛ odpowiednio wskaźniki trendów rosnacego
+˛
+i
+
+50
+
+(3.12)
+
+Rozdział 3. Finansowe szeregi czasowe
+
+spadkowego. Zdefiniowane sa˛ nast˛epujaco:
+˛
+
+Ut =
+
+
+
+C
+PtC − Pt−1
+
+C
+if PtC ≥ Pt−1
+
+
+0
+
+wpp.
+
+Dt =
+
+3.3.6
+
+
+
+C
+Pt−1
+− PtC
+
+C
+if Pt < Pt−1
+
+
+0
+
+wpp.
+
+,
+
+(3.13)
+
+.
+
+(3.14)
+
+Odchylenie standardowe stóp zwrotu
+
+Z uwagi na to, iż na etapie przygotowywania danych wejściowych dla wejść
+algorytmu uczenia maszynowego wykonywana jest selekcja cech (ang. feature
+selection), wektor danych wejściowych został rozszerzony o dodatkowe proste
+miary. Powszechnie stosowanymi miarami zyskowności inwestycji w dane aktywo
+sa˛ prosta n-dniowa stopa zwrotu Rtn oraz jej odchylenie standardowe σtn .
+
+51
+
+Rozdział 4
+Metoda budowy strategii
+inwestycyjnej
+The memory of everything is very
+soon overwhelmed in time.
+Marcus Aurelius, Meditations
+
+Niniejszy rozdział przedstawia sformułowanie nowej funkcji kary, której
+propozycja jest wynikiem badań poświ˛econych klasyfikatorom SVM oraz
+finansowym szeregom czasowym. Niestacjonarność szeregów notowań giełdowych
+kwestionuje zasadność jednakowego karania za bł˛edy klasyfikacji wszystkich
+próbek ze zbioru uczacego.
+˛
+Konieczne wydaje si˛e zastosowanie funkcji kary, która
+w dynamiczny sposób jest w stanie dostosować si˛e do istotności poszczególnych
+przykładów ze zbioru danych trenujacych.
+˛
+W dalszej kolejności zaproponowana zostaje strategia inwestycyjna, dzi˛eki
+której możliwa jest weryfikacja tezy o skuteczności predykcji krótkoterminowych
+trendów na rynkach finansowych.
+
+52
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+4.1
+4.1.1
+
+Dane
+Przygotowanie danych
+
+W zagadnieniach dotyczacych
+˛
+konstrukcji optymalnych strategii inwestycyjnych
+wskaźniki
+
+analizy
+
+technicznej
+
+używane
+
+sa˛ najcz˛eściej
+
+jako
+
+sekwencje
+
+nast˛epujacych
+˛
+po sobie wartości. Nie jest to zawsze odzwierciedlone w
+procesie konstrukcji strategii inwestycyjnych wykorzystujacych
+˛
+algorytmy
+uczenia maszynowego [Teixeira, 2010]. W [Wen et al., 2010] zaproponowała
+została koncepcja opóźnień wprowadzanych dla poszczególnych wskaźników
+a eksperymenty przeprowadzone z ich użyciem pozwoliły na osiagni˛
+˛ ecie
+obiecujacych
+˛
+rezultatów. Dla każdego wektora uczacego
+˛
+zastosowana została tego
+rodzaju modyfikacja. Każdy ze wskaźników został zdefiniowany uprzednio w
+rozdziale 3.3. Dla danego wskaźnika f :
+n(+)
+
+f ∈ {AT Rtn , Vt
+
+n(−)
+
+, Vt
+
+, OBVt , RSItn , %Rnt , Rtn , σtn }
+
+(4.1)
+
+zbiór trenujacy
+˛ zdefiniowany jest jako macierz o nast˛epujacej
+˛ postaci:
+
+
+xt−m,1
+
+
+
+xt−m+1,1
+f
+X =
+
+..
+
+.
+
+xt,1
+
+xt−m−1,2 . . .
+xt−m,2
+..
+.
+xt−1,2
+
+xt−m−pf ,pf
+
+
+
+
+
+. . . xt−m−pf +1,pf 
+,
+
+..
+..
+.
+
+.
+
+...
+xt−pf ,pf
+
+(4.2)
+
+gdzie m oznacza długość okna optymalizacji a pf jest opóźnieniem zdefiniowanym
+dla każdego ze wskaźników f . W celu przedstawienia kompletnego,
+zunifikowanego zbioru trenujacego
+˛
+dla każdej z faz uczenia macierze Xf
+
+53
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+zostały połaczone
+˛
+zgodnie z poniższym wzorem:
+
+n(+)
+n(−)
+n
+X = XAT Rt ,XVt
+,XVt
+,XOBVt ,
+n
+t
+n
+n
+,Xσt
+XRSIt ,X%Rn ,XRt
+
+(4.3)
+
+W kolejnych podrozdziałach zaprezentowane eksperymenty dotyczyć b˛eda˛
+zagadnień klasyfikacji. Z uwagi na ten fakt należy właściwie określić definicje
+zmiennych objaśnianych, b˛edacych
+˛
+klasami, przyporzadkowanie
+˛
+do których b˛edzie
+zadaniem algorytmu uczenia maszynowego. W niniejszej pracy, dany przykład
+(wektor trenujacy)
+˛ przyporzadkowywany
+˛
+jest do klasy oznaczajacej
+˛ trend rosnacy
+˛
+wówczas, gdy d-dniowa stopa zwrotu jest wi˛eksza lub równa 0. Przyporzadkowanie
+˛
+do klasy oznaczajacej
+˛ trend malejacy
+˛ ma miejsce w przeciwnym wypadku. Z uwagi
+na powyższe, dla zadanej chwili t dokonywana jest prognoza stopy zwrotu na okres
+od t+1 do t+d. Odpowiadajaca
+˛ tak opisanej definicji macierz zmiennej objaśnianej
+przyjmuje nast˛epujac
+˛ a˛ postać:
+
+
+
+
+y
+ t−m+d 
+
+
+yt−m+d+1 
+
+Y=
+
+
+..
+
+
+.
+
+
+yt+d
+
+(4.4)
+
+gdzie i-ty wiersz macierzy Y jest zmienna˛ objaśniana˛ przyporzadkowan
+˛
+a˛ do i-tego
+wiersza ze zbioru trenujacego
+˛
+X i jest obliczany w nast˛epujacy
+˛ sposób:
+
+yt =
+
+
+
+1,
+
+if Rtd ≥ 0
+
+,
+
+(4.5)
+
+
+−1, otherwise
+gdzie d oznacza horyzont predykcji w dniach.
+Algorytm otrzymuje w każdej iteracji informacj˛e o predykcji trendu w zadanym
+
+54
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+horyzoncie czasowym i w zależności od niego podejmuje decyzj˛e inwestycyjna˛
+dla poszczególnych aktywów, które sa˛ przedmiotem analizy. Wektor wejściowy
+dla wskaźnika f wykorzystywany na etapie klasyfikacji zdefiniowany dla modelu
+VW-SVM ma postać analogiczna˛ do wektora uczacego
+˛
+określonego w (4.2):
+h
+
+f
+
+i
+
+I = xt,1 xt−1,2 . . . xt−pf ,pf .
+
+(4.6)
+
+Również w sposób analogiczny do (4.3) zdefiniowany został, zagregowany
+wzgl˛edem wszystkich współczynników f , wektor wejściowy wykorzystywany na
+etapie klasyfikacji:
+
+n(+)
+n(−)
+n
+I = IAT Rt ,IVt
+,IVt
+,IOBVt ,
+n
+t
+n
+n
+,Iσt
+IRSIt ,I%Rn ,IRt
+
+4.1.2
+
+(4.7)
+
+Wybór cech za pomoca˛ indeksu Fishera
+
+W wielu opracowaniach podkreślana jest istotna rola selekcji zmiennych dla
+zastosowań konstrukcji automatycznych strategii inwestycyjnych działajacych
+˛
+na
+
+rynkach
+
+finansowych
+
+([Dai et al., 2012],
+
+[Lee, 2009],
+
+[Hsu, 2011],
+
+[Kara et al., 2011]). Na potrzeby niniejszego eksperymentu wybrany został
+współczynnik indeksu Fishera (ang. Fihser score) zdefiniowany w nast˛epujacy
+˛
+sposób:
+f (U )
+
+f (D)
+
+SB(t,j) + SB(t,j)
+
+f
+
+F (t, j) ≡
+
+f (U )
+
+f (D)
+
+,
+
+SW(t,j) + SW(t,j)
+
+(4.8)
+
+gdzie
+f (T )
+
+f (T )
+
+SB(t,j) = (xt,j
+oraz
+SW
+
+f (T )
+
+=
+
+mT
+X
+
+1
+m(T ) − 1
+
+k=1
+
+55
+
+− xft,j )2
+
+f (T )
+
+(4.9)
+
+f (T )
+
+(xk,j − xt,j )2 ,
+
+(4.10)
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+gdzie T ∈ {U, D} oznacza docelowa˛ klas˛e dla zadanej cechy, która˛ jest trend
+f (T )
+
+rosnacy
+˛ Upward lub trend spadkowy Downward. Wartości xt,j , xft,j oznaczaja˛
+średnie wartości dla każdego wskaźnika f obliczonego na podstawie wszystkich
+m okresów z opóźnieniem j okresów od momentu t obliczonymi odpowiednio dla
+wartości docelowych badź
+˛ to z klasy T , badź
+˛ ze wszystkich przykładów spośród
+okna optymalizacji. mT oznacza liczb˛e przykładów w Xf , które przynależa˛ do klasy
+T.
+Licznik wyrażenia 4.8 oznacza poziom zróżnicowania mi˛edzy dwiema
+klasami. Mianownik tego wyrażenia wskazuje na zmienność wewn˛etrzna˛ w
+ramach poszczególnych klas. Zgodnie z [Chen and Lin, 2006], główna˛ wada˛
+prezentowanej metody jest to, iż nie uwzgl˛ednia ona wzajemnych zależności
+mi˛edzy współczynnikami. Wybór optymalnej procedury selekcji zmiennych nie był
+celem niniejszej pracy. Wartościowym mogłoby okazać si˛e zastosowanie innych
+metody, tj. lasy losowe zaproponowane w [Breiman, 2001]. Aby zredukować
+ryzyko dołaczenia
+˛
+do zbioru trenujacego
+˛
+niewłaściwych zmiennych zastosowana
+została nieznacznie zmieniona procedura opisana w [Chen and Lin, 2006]:
+1. Dla każdej cechy xft,j obliczenie wartości indeksu Fishera
+2. Wygenerowanie 10 losowych poziomów progu odci˛ecia.
+3. Dla każdego progu odci˛ecia:
+(a) Usuni˛ecie ze zbioru uczacego
+˛
+X zmiennych, dla których
+wartość F f (t, j) jest mniejsza od progu odci˛ecia.
+(b) Podzielenie zbioru uczacego
+˛
+X na dwa podzbiory: trenujacy
+˛ oraz
+walidacyjny.
+(c) Zbudowanie klasyfikatora na podzbiorze trenujacym.
+˛
+(d) Powtórzenie powyższych kroków 5 razy a nast˛epnie policzenie
+średniego bł˛edu na podzbiorze walidacyjnym.
+56
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+4. Wybór progu odci˛ecia z najmniejszym poziomem odci˛ecia.
+5. Usuni˛ecie ze zbioru uczacego
+˛
+X cech, których wartość indeksu Fishera
+znajduje si˛e poniżej wybranego progu odci˛ecia.
+
+4.1.3
+
+Procedura skalowania
+
+Oba wskaźniki RSI oraz Williams %R moga˛ przyjmować wartości z zakresu 0-100,
+podczas gdy średnia stopa zwrotu za okres R zwykle przyjmuje wartości z zakresu
+-5% to 5%. Zakres dla średniej może si˛e dodatkowo zmieniać w każdej z kolejnych
+iteracji procedury walk-forward. W [Theodoridis and Koutroumbas, 2008] oraz
+[Hsu et al., 2010] podkreślona została istotność skalowania danych trenujacych
+˛
+i
+ich wpływ na skuteczność klasyfikacji. Skalowanie chroni przed zdominowaniem
+przez atrybuty przyjmujace
+˛ wysokie wartość atrybutów przyjmujacych
+˛
+niższe
+wartości. Dla każdego przykładu xi ze zbioru trenujacego
+˛
+procedura skalowania
+do zakresu [L, U ] jest nast˛epujaca:
+˛
+x0f
+tj
+
+= L + (U − L)
+
+xftj − mfj
+Mjf − mfj
+
+(4.11)
+
+gdzie L, U ∈ R; L < U ; Mi oraz mi oznaczaja˛ odpowiednio maksimum oraz
+minimum ze zbioru trenujacego
+˛
+oznaczonego w nast˛epujacy
+˛ sposób:
+h
+i
+M f = max(xfi1 ) max(xfi2 ) . . . max(xfipf )
+
+(4.12)
+
+h
+i
+mf = min(xfi1 ) min(xfi2 ) . . . min(xfipf )
+
+(4.13)
+
+i
+
+i
+
+i
+
+i
+i
+
+i
+
+i
+
+57
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+4.2 Środowisko testowe
+W celu właściwego przetestowania możliwości algorytmu VW-SVM w konstrukcji
+strategii inwestycyjnych działajacych
+˛
+na rynkach akcji stworzony został
+dedykowany system informatyczny, którego architektura została pokazana
+na rysunku 4.1. Jego głównym celem jest możliwie dokładna predykcja
+krótkoterminowych trendów. System ten składa si˛e z szeregu modułów
+podzielonych
+
+zadaniowo
+
+wzgl˛edem
+
+funkcjonalności
+
+wykorzystywanych
+
+w procedurze testowania. Zarówno ceny aktywów, jak również wyniki
+poszczególnych strategii przechowywane sa˛ w relacyjnej bazie danych. Silnik
+Symulacji (ang. simulation engine, SE) odpowiada za odczyt danych rynkowych
+z bazy zgodnie z ich definicja˛ w Scenariuszu Inwestycyjnym (ang. test scenario
+definition, TSD) a nast˛epnie iteruje przez pobrane kwotowania w zgodzie z
+procedura˛ Walk Forward. SE zapewnia m.in. brak możliwości odczytu danych
+przyszłych przez strategi˛e inwestycyjna˛ (ang. look ahead bias). Jest to prosty,
+jednak możliwy do popełnienia bład,
+˛ który diametralnie zmienia wyniki strategii
+czyniac
+˛ je nierealnie wysokimi. Odpowiadałoby to sytuacji, w której makler
+giełdowy otrzymywałby jutrzejsza˛ gazet˛e dzień przed jej publikacja.˛ Mówiac
+˛
+precyzyjnie, moduł ten udost˛epnia dane w oknie o szerokości m, na których
+strategia może wykonać optymalizacj˛e parametrów. Nast˛epnie kolejna cz˛eść
+danych o długości l jest przekazywana strategii w celu realizacji zleceń zgodnie
+z regułami przyj˛etymi na etapie optymalizacji. Kiedy wyczerpane zostana˛ dane z
+tego podzbioru okna optymalizacji oraz realizacji zleceń przesuwane sa˛ do przodu
+(tj. w kierunku rosnacych
+˛
+dat) o l kwotowań.
+SE dostarcza do modułu Algorytmu Generycznego (ang. algorytm sandbox,
+AS) kwotowania w kolejności w jakiej wyst˛epuja˛ one w procedurze Walk
+Forward. Właściwa strategia inwestycyjna jest importowana jako zależność do
+modułu AS. Taka konstrukcja umożliwia dynamiczna˛ zmian˛e algorytmów i
+58
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+Rysunek 4.1: Architektura systemu wykorzystywanego do testowania strategii
+inwestycyjnych
+wykorzystywanie przedstawionego oprogramowania jako frameworku służacego
+˛
+do analizy automatycznych strategii inwestycyjnych. Strategia w każdej iteracji
+wykonuje konieczne obliczenia i podejmuje decyzj˛e o wysłaniu zleceń kupna lub
+sprzedaży dotyczacych
+˛
+aktywa poddawanego analizie. Zlecenia te wysyłane sa˛ do
+modułu Brokera (ang. transaction broker, TB) gdzie sa˛ procesowane, składowane
+i przekazywane do kolejnego modułu, Portfela Aktywów (ang. asset portfolio
+manager, APM). W momencie kiedy moduł SE uruchamia procedur˛e przeliczenia
+modułu APM ma miejsce kilka zdarzeń. Na poczatku
+˛ APM szuka nowych zleceń
+otrzymanych przez TB i w oparciu o nie otwiera pozycje w portfelu danej strategii.
+Nast˛epnie dla każdej pozycji w ramach strategii APM oblicza aktualny poziom
+zysku, zabezpieczenia rozliczeniowego oraz kapitału dost˛epnego pod zlecenia,
+który znajduje si˛e w dyspozycji strategii w kolejnej iteracji.
+
+4.3
+
+Nowa funkcji kary dla klasyfikatora SVM
+
+Klasyfikator SVM w wersji podstawowej nadaje wszystkim przykładom ze zbioru
+treningowego jednakowe wagi. Jak zostało pokazane w [Tay and Cao, 2002]
+59
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+przyporzadkowywanie
+˛
+różnych wag poszczególnym przykładom może znaczaco
+˛
+zwi˛ekszyć możliwości predykcyjne dla zmodyfikowanej wersji algorytmu SVM
+przeznaczonego do rozwiazywania
+˛
+zadania regresji (ang. support vector regression,
+SVR). W [Zbikowski, 2014] zaproponowana został klasyfikator SVM z nowa˛
+funkcja˛ kary – ważona wolumenem maszyna wektorów nośnych (Volume Weighted
+Support Vector Machine, VW–SVM). Polega ona na dynamicznym powiazaniu
+˛
+wartości wolumenu transakcyjnego z funkcja˛ straty, która jest definiowana w
+nast˛epujacy
+˛ sposób:
+m
+
+X
+1
+min
+||w||2 +
+Ci ξi ,
+w∈H,b∈R 2
+i=1
+
+(4.14)
+
+gdzie współczynnik kary jest różny dla każdego z wektorów wejściowych.
+W podstawowej wersji algorytmu współczynnik kary reguluje poziom ryzyka
+empirycznego. Zależność ta jest stała w przestrzeni wszystkich wektorów uczacych
+˛
+zbioru trenujacego.
+˛
+Jest to podejście adekwatne wówczas, gdy każdy wektor
+uczacy
+˛ jest jednakowo istotny dla rozwiazania
+˛
+zadania klasyfikacji. Innego rodzaju
+rozwiazanie
+˛
+powinno być zastosowane dla przypadku, gdy na podstawie wiedzy
+eksperckiej jesteśmy w stanie określić, które wektory uczace
+˛ niosa˛ ze soba˛
+bardziej istotna,˛ z punktu widzenia dokładności klasyfikacji, informacj˛e. Wówczas
+chcielibyśmy zwi˛ekszyć wag˛e tego rodzaju danych, a tym samym zwi˛ekszyć kar˛e
+w wypadku bł˛ednej klasyfikacji.
+W proponowanym rozwiazaniu
+˛
+współczynnik kary Ci jest zmienny w czasie.
+Ogólnie jego postać może zostać zdefiniowana w nast˛epujacy
+˛ sposób:
+Ci = vi C,
+
+(4.15)
+
+gdzie vi oznacza funkcj˛e zwracajac
+˛ a˛ wag˛e dla poszczególnych przykładów a stała
+skalujaca
+˛ C, podobnie jak w modelu podstawowym, dobierana jest arbitralnie.
+
+60
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+Informacje dotyczace
+˛ znaczenia stałej C zostało uprzednio zawarte w rozdziałach
+2.2 oraz 2.1
+Ograniczenia dla modelu 4.14 definiujemy w analogiczny sposób jak dla
+modelu podstawowego 2.11 w nast˛epujacy
+˛ sposób:
+
+4.3.1
+
+yi (wxi − b) ≥ 1 − ξi ,
+
+(4.16)
+
+ξi ≥ 0, Ci ≥ 0.
+
+(4.17)
+
+Sformułowanie problemu optymalizacyjnego
+
+W celu rozwiazania
+˛
+problemu optymalizacyjnego 4.14 definiujemy funkcj˛e
+Lagrange’a:
+m
+
+m
+
+m
+
+X
+X
+X
+1
+L(w, α, b) = ||w||2 +
+Ci ξi −
+αi (yi (wxi + b) − 1 + ξi ) −
+ηi ξi (4.18)
+2
+i=1
+i=1
+i
+gdzie αi oraz ηi sa˛ mnożnikami Lagrange’a określonymi jako:
+ηi >= 0
+
+(4.19)
+
+αi >= 0
+
+(4.20)
+
+Rozwiazaniem
+˛
+problemu 4.14 jest punkt siodłowy funkcji L(w, α, b). Aby go
+obliczyć należy znaleźć pochodne L(w, α, b) a nast˛epnie przyrównać je do zera:
+m
+
+m
+
+X
+X
+∂L
+=w−
+αi yi xi ≡ 0 ⇒ w =
+αi yi xi
+∂w
+i=1
+i=1
+m
+
+(4.21)
+
+m
+
+X
+X
+∂L
+=−
+αi yi ≡ 0 ⇒
+αi yi = 0
+∂b
+i=1
+i=1
+61
+
+(4.22)
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+∂L
+= Ci − ηi − αi ≡ 0 ⇒ Ci = ηi + αi
+∂ξi
+
+(4.23)
+
+Z problemu minimalizacji funkcji 4.14 można przejść do problemu dualnego
+poprzez nast˛epujace
+˛ przekształcenie:
+m
+
+L(w, α, b) =
+
+m
+
+m
+
+m
+
+XX
+1 XX
+αi αj yi yj xi xj −
+αi αj yi yj xi xj +
+2 i=1 j=1
+i=1 j=1
++
+
+m
+X
+
+αi −
+
+i=1
+
+m
+X
+
+ξi (αi + ηi ) + Ci
+
+i=1
+
+=−
+
+m m
+1 XX
+
+2
+
+m
+X
+
+ξi =
+
+i=1
+m
+X
+
+αi αj yi yj xi xj +
+
+i=1 i=1
+
+(4.24)
+
+αi
+
+i
+
+Zaleta˛ takiego podejścia jest to, iż operujemy wyłacznie
+˛
+w przestrzeni wektorów
+wejściowych a parametrami modelu staja˛ si˛e wyłacznie
+˛
+współczynnik Lagrange’a
+αi . Problem dualny przyjmuje nast˛epujac
+˛ a˛ postać:
+max
+
+m
+X
+
+αi ≥0
+
+i=1
+
+m
+
+m
+
+1 XX
+αi −
+αi αj yi yj ϕ(xi )ϕ(xj ).
+2 i=1 j=1
+
+(4.25)
+
+gdzie:
+m
+X
+
+αi yi = 0,
+
+(4.26)
+
+i=1
+
+αi ≥ 0.
+
+(4.27)
+
+Jako funkcj˛e jadrow
+˛
+a˛ na potrzeby przeprowadzonych testów przyj˛eto radialna˛
+funkcj˛e bazowa˛ postaci:
+K(x1 , x2 ) = exp(
+
+kx1 − x2 k2
+),
+γ
+
+gdzie γ oznacza liczb˛e przykładów w wektorze wejściowym.
+62
+
+(4.28)
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+Jak zostało pokazane propozycja 4.14 nie wpływa na zmian˛e procedury
+optymalizacyjnej. Problem dualny otrzymany w algorytmie podstawowym (4.25)
+jest identycznie sformułowany jak dla w przedstawionej powyżej zmodyfikowanej
+wersji (2.16). Może on zostać rozwiazany
+˛
+poprzez zastosowanie algorytmu
+Sequential Minimal Optimization [Platt, 1999]. Na potrzeby niniejszej pracy
+wykorzystano bibliotek˛e LIBSVM [Chang and Lin, 2001].
+
+4.3.2
+
+Funkcja ważaca
+˛ zależna od wolumenu
+
+W kolejnych iteracjach macierz wejściowa X i odpowiadajacy
+˛ jej wektor wag V
+zdefiniowane sa˛ w nast˛epujacy
+˛ sposób:
+
+
+
+x
+xt−m,2
+ t−m,1
+
+xt−m+1,1 xt−m+1,2
+X=
+
+..
+..
+
+.
+.
+
+xt,1
+xt,2
+
+
+
+
+
+
+
+v
+ t−m 
+
+
+
+
+vt−m+1 
+. . . xt−m+1,n 
+
+V = 
+ ..  ,
+
+..
+..
+.
+
+
+. 
+.
+
+
+
+vt
+...
+xt,n
+...
+
+xt−m,n
+
+(4.29)
+
+gdzie xt,j oznacza j–ta˛ cech˛e w wektorze wejściowym w momencie t a m oznacza
+wielkość zbioru trenujacego.
+˛
+Powyższa definicja macierzy wejściowej stanowi
+przykład dla konstrukcji funkcji vt opisanej poniżej. Niemniej proponowana
+definicja danych wejściowych nie ogranicza dalszych rozważań co do kształtu
+funkcji vt i w szczególności może ona przybierać odmienna˛ form˛e. Dokładny opis
+danych wejściowych użytych w celach eksperymentalnych został przedstawiony w
+rozdziale 4.1.1.
+Kluczowy dla wyników modelu wykorzystujacego
+˛
+algorytm VW–SVM jest
+odpowiedni dobór funkcji vt . Dla opisywanego przypadku przyj˛eto funkcj˛e vt
+
+63
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+postaci:
+Pd
+k=0 Vt−k
+vt = Pm
+,
+i=0 Wt−i
+
+(4.30)
+
+gdzie Vt−k oznacza zrealizowany wolumen transakcyjny dla pojedynczego
+przykładu ze zbioru danych trenujacych
+˛
+w momencie t z opóźnieniem k okresów.
+Wartość d jest określona jako długość najdłuższego ze wskaźników technicznych,
+które wykorzystywane sa˛ do obliczenia wartości dla j–tego wektora wejściowego.
+Liczba kwotowań, która jest wykorzystywana do obliczenia pojedynczego wektora
+wejściowego wynosi m + d. Np. dla obliczenia wartości xt−m używane sa˛
+kwotowania z zakresu od t − m − d do t − m. Wartość wolumenu Wi zdefiniowana
+jest jako suma wolumenów ze wszystkich d okresów wzgl˛edem momentu obliczeń
+t.
+
+4.4
+
+Metoda budowy strategii inwestycyjnej
+
+W celu weryfikacji czy klasyfikator VW-SVM z proponowana˛ funkcja˛ kary posiada
+zdolność przewidywania przyszłych trendów dla finansowych szeregów czasowych,
+skonstruowany został algorytm strategii inwestycyjnej zaprezentowany na rysunku
+4.2.
+
+64
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+Input: Quotation list Q for dates
+t ∈< startDate; endDate >
+1: l ← trading window length
+2: m ← optimization window length
+3: QL ← empty list for incoming quotations
+4: CP ← NONE
+5: for t ← startDate, endDate do
+6:
+QL(t) ← Q(t)
+7:
+for each f do
+8:
+xft ←compute f for current input 
+9:
+N ← If [pf − 1], Xf [m, 1 : pf − 1]
+
+
+10:
+If ← xft , If [2 : pf − 1]
+
+T
+11:
+Xf ← Xf [1 : m − 1; ], N
+12:
+end for
+13:
+if size(QL) < m then
+14:
+continue
+15:
+end if
+16:
+if size(QL) mod l = 0 then
+17:
+compute weights for X
+18:
+X0 ← feature selection on X
+19:
+scale X0
+20:
+train VW-SVM classifier on X0
+21:
+end if
+22:
+I0 ← features from I present in X0
+23:
+p ← VW-SVM classifier prediction for I0
+24:
+if p = 1 ∧ CP <> LONG then
+25:
+open LONG position
+26:
+CP ← LONG Data preparatio
+27:
+else if p = 0 ∧ CP = LONG then
+28:
+close all open positions
+29:
+end if
+30: end for
+Rysunek 4.2: Algorytm strategii inwestycyjnej bazujacy
+˛
+na klasyfikatorze
+VW-SVM
+Główna p˛etla algorytmu iteruje po wszystkich dniach. W każdej z iteracji
+notyfikowany jest moduł SE (vide rozdział 4.2). W każdej z iteracji obliczane
+sa˛ nowe, bieżace
+˛ wartości dla każdego ze wskaźników f . Sa˛ one nast˛epnie
+dodawane na poczatek
+˛
+wektora If . Aby zachować jego stała˛ długość, zgodnie z
+65
+
+Rozdział 4. Metoda budowy strategii inwestycyjnej
+
+procedura˛ optymalizacyjna,˛ ostatni element zostaje usuni˛ety w kolejnym kroku z
+If . Wartość ta zostaje dodana do macierzy Xf wraz odpowiednim przesuni˛eciem
+elementów w jej ramach. Co każde l kwotowań, klasyfikator jest reoptymalizowany
+na aktualnych danych zgromadzonych w macierzy X, stanowiacej
+˛ aktualny zbiór
+trenujacy.
+˛ Wynikiem tejże optymalizacji jest model, który zostaje aplikowany do
+kolejnych l − 1 iteracji w celu predykcji trendu.
+
+66
+
+Rozdział 5
+Eksperymenty
+The man of science has learned to
+believe in justification, not by faith,
+but by verification
+Thomas Henry Huxley
+
+5.1
+
+Istotność statystyczna VW-SVM
+
+Proponowany w niniejszej pracy model VW-SVM jest alternatywa˛ w stosunku
+do systemów opartych na podstawowym algorytmie SVM, które zostały
+opisane w literaturze. Przed przystapieniem
+˛
+do konstrukcji właściwej strategii
+inwestycyjnej opartej o proponowany algorytm zbadana została jego skuteczność
+w przewidywaniu kierunku zmian finansowych szeregów czasowych. Jest to
+weryfikacja pierwszej cz˛eści postawionej w 1.2.2 tezy.
+Eksperyment został podzielony na dwie cz˛eści. W każdej z nich
+przeprowadzono 420 niezależnych symulacji, z której każda opiera si˛e na
+analizie 2577 punktów z szeregu czasowego. Łacznie
+˛
+analizie zostało poddanych
+1.082.340 próbek. W pierwszej z nich zbadano zdolność do przewidywania
+67
+
+Rozdział 5. Eksperymenty
+
+krótkoterminowych trendów dla podstawowego algorytmu SVM, w drugiej jego
+zmodyfikowana˛ wersj˛e VW-SVM z proponowana,˛ zmienna˛ w czasie funkcja˛ kary
+4.14.
+
+Rzeczywista wartość
+%
+
+&
+
+%
+
+719
+
+655
+
+1374
+
+&
+
+604
+
+599
+
+1203
+
+Σ
+
+1323
+
+1254
+
+Prognoza
+
+SVM
+
+Σ
+
+Rzeczywista wartość
+%
+
+&
+
+%
+
+731
+
+558
+
+1289
+
+&
+
+592
+
+696
+
+1288
+
+Σ
+
+1323
+
+1254
+
+Prognoza
+
+VW-SVM
+
+Σ
+
+Tablica 5.1: Przykładowe tablice pomyłek (ang. confusion matrix) dla
+klasyfikatorów SVM oraz VW-SVM prognozujacych
+˛
+5-dniowe trendy dla
+firmy AIG. % oznacza trend rosnacy,
+˛ & oznacza trend spadkowy
+
+Z uwagi na fakt, iż w prezentowanym eksperymencie mamy do czynienia
+68
+
+Rozdział 5. Eksperymenty
+
+z wielokrotna˛ klasyfikacja˛ binarna,˛ możliwe jest skorzystanie ze znanych
+i
+
+rozpowszechnionych
+
+miar
+
+oceny
+
+skuteczności
+
+takiej
+
+klasyfikacji.
+
+W
+
+ogólności dla problemów klasyfikacji binarnej zdefiniować można cztery
+wskaźniki reprezentujace
+˛ możliwe kombinacje wyników predykcji modelu oraz
+rzeczywistych wartości:
+• wskaźnik prawdziwie pozytywnych (ang. true positives, TP) decyzji modelu
+- dla przypadku, kiedy model przewiduje zgodnie z rzeczywistościa˛ trend
+rosnacy,
+˛
+• wskaźnik prawdziwie negatywnych (ang. true negatives, TN) decyzji modelu
+- dla przypadku, kiedy model przewiduje zgodnie z rzeczywistościa˛ trend
+spadkowy,
+• wskaźnik fałszywie pozytywnych (ang. false positives, FP) decyzji modelu
+- dla przypadku, kiedy model przewiduje niezgodnie z rzeczywistościa˛ trend
+rosnacy,
+˛
+• wskaźnik fałszywie negatywnych (ang. false negatives, FN decyzji modelu dla przypadku, kiedy model przewiduje niezgodnie z rzeczywistościa˛ trend
+spadkowy.
+Te cztery statystki cz˛esto obrazowane sa˛ w postaci tablicy pomyłek. Jej przykład
+dla pojedynczego aktywa został zaprezentowany w tabeli 5.1.
+Pierwsza˛ z miar jest dokładność (ang. accuracy), która określa stosunek
+poprawnych decyzji modelu w stosunku do liczby wszystkich decyzji, poprawnych
+oraz niepoprawnych. Jest zdefiniowana nast˛epujaco:
+˛
+ACC =
+
+TP + TN
+.
+TP + FP + TN + FN
+
+(5.1)
+
+Kolejna˛ miara˛ jest miara nazywana precyzja˛ (ang. precision), która określa stosunek
+69
+
+Rozdział 5. Eksperymenty
+
+liczby poprawnie przewidzianych trendów rosnacych
+˛
+do wszystkich prognoz trendu
+rosnacego
+˛
+dokonanego przez model. Jest zdefiniowana nast˛epujaco:
+˛
+PPV =
+
+TP
+.
+TP + FP
+
+(5.2)
+
+Nast˛epna˛ miara˛ jest czułość modelu (ang. recall), która określa stosunek liczby
+poprawnie przewidzianych trendów rosnacych
+˛
+do wszystkich takich chwil w czasie
+t, dla których w rzeczywistości wyst˛epował trend rosnacy.
+˛
+Jest zdefiniowana
+nast˛epujaco:
+˛
+TPR =
+
+TP
+TP + FN
+
+(5.3)
+
+Ostatnia˛ miara˛ jest miara F1 (ang. F1 score), która uwzgl˛ednia zarówno precyzj˛e
+jak i czułość modelu. Jest zdefiniowana w nast˛epujacy
+˛ sposób:
+F1 =
+
+2T P
+2T P + F P + F N
+
+(5.4)
+
+¯
+ACC
+
+P P¯ V
+
+T P¯ R
+
+F¯1
+
+SVM
+
+51.10%
+
+56.05%
+
+58.99%
+
+57.47%
+
+VW-SWVM
+
+51.53%
+
+56.17%
+
+60.89%
+
+58.40%
+
+t
+
+2.5037
+
+0.47
+
+5.064
+
+3.092
+
+p-wartość
+
+0.012
+
+0.638
+
+5.066 ∗ 10−7
+
+0.002
+
+∆
+
+0.43%
+
+0.12%
+
+1.9%
+
+0.93%
+
+Tablica 5.2: Wyniki modeli SVM oraz VW-SVM dla predykcji krótkoterminowego
+trendu rosnacego.
+˛
+
+Prezentowane wyniki sugeruja,˛ że modyfikacja algorytmu wpłyn˛eła pozytywnie
+70
+
+Rozdział 5. Eksperymenty
+
+na zdolność predykcji krótkoterminowych trendów. Aby jednoznacznie potwierdzić
+ta˛ tez˛e posłużono si˛e testem parametrycznym Welcha [Welch, 1947] w celu
+zbadania istotności statystycznej wyników. Jego hipoteza zerowa mówi, że różnica
+średnich w obu populacjach jest równa parametrowi µ. Test Welcha nie czyni a
+priori założeń dotyczacych
+˛
+wielkości czy też wariancji w porównywanych próbach.
+Statystyka t zdefiniowana jako:
+X̄1 − X̄2 − µ
+t= q 2
+σ1
+σ2
++ N22
+N1
+
+(5.5)
+
+ma rozkład t–Studenta z ν stopniami swobody, które moga˛ być obliczone w
+nast˛epujacy
+˛ sposób:
+σ2
+
+ν≈
+
+( N11 +
+σ14
+N12 (N1 −1)
+
++
+
+σ22
+)
+N2
+σ24
+N22 (N2 −1)
+
+,
+
+(5.6)
+
+gdzie X̄1 ,X̄2 to średnie porównywanych populacji; µ jest parametrem testu
+określajacym
+˛
+różnic˛e mi˛edzy dwiema średnimi - dla wypadku zbadania różnicy
+średnich wynosi on 0; σ1 , σ2 to ich odchylenia standardowe; N1 oraz N2 oznaczaja˛
+rozmiar poszczególnych próbek.
+Dokładność mierzona zgodnie z 5.1 uległa poprawie dla klasyfikatora
+VW-SVM o 0.43%. Dla poziomu istotności 1%, z uwagi na znaczne rozmiary
+próby testowej wartość statystyki testowej t osiaga
+˛ poziom pozwalajacy
+˛ na
+odrzucenie hipotezy zerowej mówiacej
+˛ o równości wartości miary dokładności dla
+poszczególnych klasyfikatorów i przyj˛ecie hipotezy alternatywnej, a w nast˛epstwie
+tego stwierdzenie, iż różnica ta jest istotna statystycznie.
+W wyniku wprowadzenie ważonej wolumenem funkcji kary zwi˛ekszona została
+czułość modeli 5.3. Średni wzrost tej miary wyniósł 1.9%. Dla poziomu istotności
+1% wartość statystyki testowej oraz otrzymana p-wartość pozwalaja˛ na odrzucenie
+hipotezy zerowej mówiacej
+˛
+o równości średniej wartości miary czułości w
+
+71
+
+Rozdział 5. Eksperymenty
+
+obu populacjach testowych oraz przyj˛ecie hipotezy alternatywnej mówiacej,
+˛
+iż
+obliczona różnica jest statystycznie istotna.
+Miara F1 dla przypadku klasyfikatora VW-SVM osiaga
+˛ wartość o 0.91%
+wyższa˛ dla 420 analizowanych modeli niż klasyfikator SVM. Przy poziomie
+istotności 1% test Welcha pozwala na odrzucenie hipotezy zerowej o równości
+średniej miary F1 w obu próbach i przyj˛eciu hipotezy alternatywnej mówiacej,
+˛
+iż
+różnica w średnich jest statystycznie istotna.
+Dla przypadku miary precyzji wynik testu Welcha nie pozwolił na odrzucenie
+hipotezy zerowej przy założonym poziomie istotności. Różnica 0.12% nie okazała
+si˛e istotna statystycznie.
+Z powyższych rozważań wynika, iż wprowadzenie ważonej wolumenem
+funkcji kary skutkuje zwi˛ekszeniem dokładności oraz czułości modelu w zakresie
+przewidywania trendów rosnacych.
+˛
+W rozdziałach 5.3 oraz 5.4 zaprezentowane
+zostana˛ wyniki testów konstrukcji strategii inwestycyjnej z użyciem klasyfikatora
+z omawiana˛ funkcja˛ kary oraz zbadany zostanie wpływ tejże zmiany na wyniki
+inwestycyjne.
+
+5.2
+
+Walidacja strategii inwestycyjnej
+
+Krytyczne dla analizy wyników omawianej grupy algorytmów bazujacych
+˛
+na
+szeregach czasowych jest poprawny sposób testowania. Powinien on zapewniać
+rozdzielenie danych, na których optymalizowane sa˛ parametry oraz testowane
+wyniki modelu. Testowanie na próbie trenujacej
+˛
+(ang. in-sample testing) może
+doprowadzić w łatwy sposób do zjawiska zbytniego dopasowania danych
+do modelu (ang. overfitting). Klasyczne podejście w dziedzinach zwiazanych
+˛
+z uczeniem maszynowym oraz statystyka˛ polega na podzieleniu dost˛epnych
+danych na testujace,
+˛ trenujace
+˛ oraz walidacyjne. Podział ten dokonywany jest w
+odpowiednich proporcjach, przyporzadkowuj
+˛
+ac
+˛ zwykle znaczna˛ cz˛eść danych do
+72
+
+Rozdział 5. Eksperymenty
+
+Rysunek 5.1: Histogram stóp zwrotu przykładowego systemu transakcyjnego.
+procesu budowy modelu.
+Opisany powyżej model testowania ma jednak znaczace
+˛ wady wynikajace
+˛
+ze wspomnianych wcześniej cech szeregów czasowych. Zakłada, że raz
+zoptymalizowany model może być z powodzeniem stosowany w przyszłości.
+W wypadku finansowych szeregów czasowych szczególnie groźne jest zjawisko
+data snooping, które prowadzi do bł˛ednego wykorzystania metod statystycznych
+i data mining. Jego konsekwencja˛ jest dostosowanie do zależności, na które
+maja˛ wpływ bł˛edy przypadkowe lub szum. Czynnikiem, który zwi˛eksza ryzyko
+wystapienia
+˛
+tych problemów jest zbyt duża liczba parametrów objaśniajacych.
+˛
+Przykładem może być sytuacja zilustrowana na rysunku (5.1), w której za znaczna˛
+cz˛eść wyników odpowiedzialne sa˛ relatywnie mało prawdopodobne zdarzenia z
+dodatniego ogona rozkładu. Jest wi˛ec szczególnie ważne aby skonstruowany model
+poddać odpowiednim procedurom weryfikujacym
+˛
+zdolności predykcyjne.
+W kontekście finansowych szeregów czasowych opracowano kilka metod
+testowania, których zadaniem jest sprawdzenie możliwości predykcyjnych modeli.
+
+73
+
+Rozdział 5. Eksperymenty
+
+Rysunek 5.2: Optymalizacja i testowanie zgodne z walk forward analysis.
+Najważniejsze z nich to [Aronson, 2007]:
+1. Out-of sample testing - test możliwości predykcyjnych modelu na próbce
+danych, która nie była wykorzystywana w procesie optymalizacji.
+2. Walk Forward Analysis - działanie analizy walk-forward jest zbliżone do
+metody walidacji krzyżowej. Jest jednak dostosowana do szeregów
+czasowych. Pierwsza faza (o długości danych oWL) polega na wybraniu
+odpowiedniej próby dla zadania optymalizacji modelu. Po niej nast˛epuje
+faza testowania (o długości tWL). W momencie zakończenia testowania
+przesuwane jest okno optymalizacji o długość oWL. Opisana procedura
+zostaje powtarzana, do czasu gdy osiagni˛
+˛ ety zostanie koniec danych.
+Działanie analizy walk-forward zostało zilustrowane na rysunku 5.2.
+3. Czynnik data minig Markowitz/Xu (ang. Markowitz/Xu data mining factor)
+przedstawiony w [Markowitz and Xu, 1994] - w tym teście najlepsza stopa
+zwrotu H z optymalizowanych modeli korygowana jest do wartości H 0
+przez uzależnienie od średniej stopy zwrotu ze wszystkich modeli R
+powi˛ekszonej o cz˛eść zysku ponad ta˛ średnia˛ wynikajaca
+˛ z parametru
+
+74
+
+Rozdział 5. Eksperymenty
+
+B ∈ (0; 1i dobieranego w sposób arbitralny:
+H 0 = R + B(H − R)
+
+(5.7)
+
+4. Test wiarygodności White’a (ang, White’s reality check) - konstrukcja tej
+metody zbliżona jest do klasycznego testowania metoda˛ bootstraping.
+Hipoteza zerowa tego testu zakłada, że wszystkie modele w procesie
+optymalizacji maja˛ zerowa˛ wartość predykcyjna.˛ Budowany jest rozkład
+prawdopodobieństwa maksymalnych średnich zwrotów dla wszystkich
+modeli. Nast˛epnie na podstawie przypadków, w których maksymalna
+średnia stopa zwrotu przekracza stop˛e zwrotu z optymalizowanego modelu
+obliczany jest graniczny poziom istotności. Jak pokazano w [White, 2000]
+metoda ta weryfikuje poprawność odrzucenia hipotezy zerowej przez
+metod˛e klasycznego bootstraping’u.
+5. Metoda permutacji Monte Carlo (ang. Monte Carlo permuation method) wykorzystujac
+˛ metod˛e symulacji Monte Carlo sprawdzana jest hipoteza
+zerowa braku zależności pomi˛edzy wynikami modelu a przyszłym
+zachowaniem rynku.
+Wśród
+
+wielu
+
+publikacji
+
+dotyczacych
+˛
+
+metod
+
+sztucznej
+
+inteligencji
+
+wykorzystywanych do predykcji danych finansowych rzadko można si˛e
+spotkać ze stosowaniem bardziej zaawansowanych metod weryfikacji zdolności
+predykcyjnych modelu. Cz˛esto autorzy poprzestaja˛ na prostych testach
+out-of-sample, które przy relatywnie małej ilości danych w porównaniu z ogromna˛
+ilościa˛ konstruowanych modeli narażone sa˛ na efekt zbytniego dopasowania.
+Konieczne jest, aby w zagadnieniach predykcji finansowych szeregów czasowych
+korzystać z bardziej zaawansowanych modeli pozwalajacych
+˛
+na weryfikacj˛e
+skuteczności proponowanych algorytmów.
+75
+
+Rozdział 5. Eksperymenty
+
+W [Ładyżyński et al., 2013] opisano wykorzystanie lasów losowych Breimana
+w konstruowaniu strategii inwestycyjnej dla akcji spółki Occidental Petroleum
+Corporation. Pokazano, że w podstawowej wersji algorytmu nie było możliwe
+osiagni˛
+˛ ecie ponadprzeci˛etnej stopy zwrotu. Jakkolwiek algorytm dopasował si˛e do
+zaproponowanego modelu matematycznego jednak nie był w stanie przeprowadzić
+skutecznej predykcji dla danych rzeczywistych. Autorzy przeprowadzili dodatkowy
+test polegajacy
+˛
+na zachłannym przeszukiwaniu przestrzeni parametrycznej
+algorytmem przeszukiwania siatki (ang. grid search) aby zweryfikować czy tego
+typu działania polepsza˛ skuteczność strategii.
+
+500000
+
+Grid search results
+
+300000
+100000
+
+200000
+
+Equity
+
+400000
+
+Benchmark − OXY
+RandomForest − OXY
+Optimized OXY
+
+0
+
+2000
+
+4000
+
+6000
+
+8000
+
+Hours (2004.01.01 − 2008.12.04)
+
+Rysunek 5.3: Wyniki ekstensywnej optymalizacji strategii inwestycyjnej
+(Optimized OXY) porównane z szeregiem bazowym (Benchmark - OXY) oraz
+ze strategia˛ wykorzystujac
+˛ a˛ las losowy Breimana (RandomForest - OXY)(z
+[Ładyżyński et al., 2013])
+Wyniki tego eksperymentu pokazane sa˛ na rysunku 5.3. Dla zainwestowanej
+76
+
+Rozdział 5. Eksperymenty
+
+na poczatku
+˛
+kwoty 100000$ strategia zachłanna uzyskała kapitał końcowy
+w wysokości 466119$ podczas, gdy wynik strategii „kup i trzymaj” (ang.
+buy and hold) ukształtowała si˛e na poziomie połowy tej wartości. Strategia
+wykorzystujaca
+˛ ekstensywna˛ optymalizacj˛e doskonale dopasowała si˛e do rynku
+w okresie hossy. W okresie bessy oraz konsolidacji pozostawała poza rynkiem.
+Autorzy konkluduja,˛ iż wynik tego eksperymentu jednoznacznie pokazuje, że jeśli
+wzorce sa˛ poszukiwane w danych wystarczajaco
+˛ długo, z użyciem ekstensywnych
+metod na pewno zajdzie sytuacja zbytniego dopasowania do danych. Jest to
+tym bardziej możliwe jeśli model charakteryzuje si˛e zbyt duża˛ liczba˛ wolnych
+parametrów. Aby zminimalizować to ryzyko konieczne jest używanie znacznie
+bardziej zaawansowanych metod testowania i optymalizacji jak choćby tych
+prezentowanych w niniejszym podrozdziale.
+
+5.3
+
+Strategia inwestycyjna - akcje amerykańskie
+
+Na potrzeby prezentowanego eksperymentu zostało losowo wybranych dwadzieścia
+akcji spółek giełdowych notowanych w ramach amerykańskiego indeksu S&P
+500. Z ich użyciem dokonano ewaluacji skuteczności strategii inwestycyjnej
+zaproponowanej w rozdziale 4.4. Na dane rynkowe użyte w eksperymencie składaja˛
+si˛e dzienne kwotowania cen zamkni˛ecia z okresu od poczatku
+˛ stycznia 2003 r. do
+21-szego października 2013 r.
+W ramach ewaluacji strategii inwestycyjnej zostało przetestowanych kilka
+różnych konfiguracji parametrów algorytmu. Wszystkie zebrane sa˛ w tabeli 5.3.
+Nadrz˛ednym celem eksperymentu było zbadanie istotności wprowadzenia ważenia
+przykładów (ang. example weighting, EW). Zbadano też istotność wprowadzenia
+selekcji atrybutów z użyciem indeksu Fihsera opisanego w podrozdziale 4.1.2
+oraz wpływu wydłużania długości okna optymalizacji oraz okna walidacyjnego w
+ramach procedury walk-forward. W pierwszych czterech konfiguracjach parametry
+77
+
+Rozdział 5. Eksperymenty
+
+te zostały ustawione odpowiednio na 100 oraz 10 dni a dla dalszych czterech
+parametryzacji na odpowiednio 500 oraz 50 dni. Oddzielny test przeprowadzony
+został w celu zweryfikowania na ile istotne jest wprowadzenie czynnika dodajacego,
+˛
+oprócz bazowego wskaźnika na moment t, dodatkowych pf opóźnień opisanych
+w podrozdziale 4.1.1. W sumie w całym eksperymencie przeprowadzono 360
+ewaluacji strategii inwestycyjnej na zbiorze trenujacym,
+˛
+który zawierał ponad 50
+tysi˛ecy kwotowań.
+Tablica 5.3: Konfiguracje testowe. EW oraz FS oznaczaja˛ odpowiednio klasyfikator
+SVM z proponowana˛ funkcja˛ kary wykorzystujac
+˛ a˛ ważenie wolumenem oraz
+selekcj˛e atrybutów za pomoca˛ indeksu Fisher’a. O obecności EW oraz FS w danej
+konfiguracji świadczy „+” lub „-” w przeciwnym przypadku.
+Configuration Value
+pf
+
+m
+
+l
+
+EW
+
+FS
+
+Conf.1
+
+1
+
+100
+
+10
+
+-
+
+-
+
+Conf.2
+
+1
+
+100
+
+10
+
+-
+
++
+
+Conf.3
+
+1
+
+100
+
+10
+
++
+
+-
+
+Conf.4
+
+1
+
+100
+
+10
+
++
+
++
+
+Conf.5
+
+1
+
+500
+
+50
+
+-
+
+-
+
+Conf.6
+
+1
+
+500
+
+50
+
+-
+
++
+
+Conf.7
+
+1
+
+500
+
+50
+
++
+
+-
+
+Conf.8
+
+1
+
+500
+
+50
+
++
+
++
+
+Conf.9
+
+5
+
+500
+
+50
+
++
+
++
+
+Dla konfiguracji 1–4 rezultaty zostały zaprezentowane w tabeli 5.4. Wyniki
+dla konfiguracji 5–8 znajduja˛ si˛e w tabeli 5.6. Dwa rodzaje wskaźników zostały
+wykorzystane do oszacowania skuteczności prezentowanej strategii inwestycyjnej
+w poszczególnych konfiguracjach: stopa zwrotu za cały okres testu (R) oraz
+maksymalna procentowa strata od najwi˛ekszej wartości osiagni˛
+˛ etego kapitału (DD)
+78
+
+Rozdział 5. Eksperymenty
+
+(ang. maximum drawdown) zdefiniowana w nast˛epujacy
+˛ sposób:
+
+DD = max
+
+t=1...m
+
+maxτ =1...t−1 (Pτ ) − Pt
+Pt
+
+!
+(5.8)
+
+Miara maksymalnej straty od maksimum kapitału jest cz˛esto używana na
+rynkach finansowych do oceny ryzyka inwestycyjnego. Jest użyteczna z uwagi
+na możliwość jasnej interpretacji. Jeśli wskaźnik DD pozostaje w ramach
+pewnego nieprzekroczonego zakresu procentowego oznacza to, iż strategia jest
+wiarygodna, a jej założenia sa˛ spełnione. W przeciwnym wypadku przełamanie
+długookresowej maksymalnej procentowej wartości straty może być poważnym
+sygnałem pogorszenia i zmiany otoczenia rynkowego [Magdon-Ismail et al., 2003].
+W tabelach 5.5 oraz 5.7 zaprezentowane zostały informacje dodatkowe
+dotyczace
+˛ zwrotu strategii „buy & hold” dla poszczególnych aktywów. Zakłada ona
+zakup akcji na poczatku
+˛ okresu testowego oraz ich odsprzedanie na jego końcu.
+Wyniki zaprezentowane w tabeli 5.4 pokazuja,˛ iż zwykły klasyfikator SVM
+(Konfiguracja 1.) nie jest w stanie przewidywać krótkoterminowych trendów.
+W tym scenariuszu, strategia inwestycyjna straciła średnio 23.07% osiagaj
+˛ ac
+˛
+maksymalna˛ strat˛e mierzona˛ współczynnikiem DD w wysokości 70.76%. Z
+perspektywy inwestorów jest to strata nieakceptowalna, która prowadzi do utraty
+zainwestowanych środków. Konfiguracje 2. oraz 3. osiagn˛
+˛ eły wyniki znacznie
+lepsze w zakresie stopy zwrotu, gdyż jest ona dodatnia dla wszystkich aktywów
+w obu przypadkach. Wielkość maksymalnej straty uległa nieznacznej poprawie w
+stosunku do konfiguracji 1. Co wi˛ecej, oba scenariusze pokazuja,˛ iż wprowadzenia
+niezależnie zarówno proponowanej funkcji kary oraz selekcji atrybutów wpływaja˛
+pozytywnie na wyniki eksperymentu zwi˛ekszajac
+˛ stop˛e zwrotu o odpowiednio
+43.22% oraz 53.44%. W wypadku, kiedy użyte zostaja˛ razem można mówić o
+synergii działania bowiem w tymże przypadku (Konfiguracja 4.) stopa zwrotu
+zwi˛eksza si˛e o 75.19%. Maksymalna procentowa strata zmniejsza si˛e o 7.74%.
+79
+
+Rozdział 5. Eksperymenty
+
+Przykładowe wyniki dla tego przypadku znajduja˛ si˛e na rysunku 5.4. Prezentowane
+wyniki dla Konfiguracji 4. świadczyć moga˛ o pewnym potencjale drzemiacym
+˛
+w prezentowanym modelu. Konieczne jest jednak przeprowadzenie dalszych
+eksperymentów, które analizuja˛ szersze spektrum historii kwotowań w procesie
+decyzyjnym.
+Dla konfiguracji 5-8 rozszerzony został horyzont okna optymalizacji do 500 dni.
+Równocześnie zwi˛ekszona została długość okna testowania na 50 dni. Zmiana okna
+testowania podyktowana została głównie faktem, iż każda z faz optymalizacji była
+znaczaco
+˛ dłuższa. Jednocześnie zachowany pozostaje ten sam stosunek pomi˛edzy
+obiema wartościami. Z tego powodu zbadany został wyłacznie
+˛
+wpływ zwi˛ekszenia
+zbioru uczacego
+˛
+dla badanej strategii inwestycyjnej. Jednakże stosunek długości
+okien optymalizacji oraz testowania stanowić może równie interesujacy
+˛ obszar
+badań. Nie jest on jednak przedmiotem niniejszych rozważań.
+Wyniki zaprezentowane w tabeli 5.6 dla przypadku Konfiguracji 5. pokazuja˛
+jedynie nieznaczna˛ popraw˛e w zakresie stopy zwrotu w stosunku do Konfiguracji
+1. Pozostaje ona nadal ujemna. Majac
+˛ na uwadze wyniki eksperymentów dla
+Konfiguracji 2. oraz 3., które uwzgl˛edniały wykorzystanie klasyfikatora SVM z
+ważona˛ wolumenem funkcja˛ kary oraz algorytm selekcji atrybutów zdecydowano
+si˛e na ponowne sprawdzenie wpływu tychże modyfikacji na rozszerzonym zbiorze
+trenujacym.
+˛
+Zgodnie z oczekiwaniami, w stosunku do Konfiguracji 5. proponowane
+udoskonalenia oddzielnie wpłyn˛eły pozytywnie na wyniki strategii inwestycyjnej.
+Co wi˛ecej uzyskane wyniki sa˛ lepsze w zakresie stopy zwrotu oraz maksymalnej
+straty od odpowiadajacych
+˛
+im Konfiguracji 2. oraz 3.
+Połaczenie
+˛
+ważonej wolumenem funkcji kary oraz dodanie selekcji atrybutów
+ponownie skutkowało w synergicznym efekcie polepszenia wyników w
+zakresie zwi˛ekszenia stopy zwrotu oraz zmniejszenia maksymalnej straty,
+który odzwierciedlony zostaje w ramach wyników Konfiguracji 8. Przykładowe
+
+80
+
+Rozdział 5. Eksperymenty
+
+Tablica 5.4: Wyniki testów dla Konfiguracji 1-4 z Tabeli 5.3
+Stock
+
+Conf. 1
+
+Conf. 2
+
+Conf. 3
+
+Conf. 4
+
+R[%] DD[%] R[%] DD[%] R[%] DD[%] R[%] DD[%]
+ACT
+
+6.17 -61.48 95.59 -48.76 32.16 -57.81 43.50 -64.94
+
+AVB
+
+-48.75 -57.82 -48.26 -69.01 -23.73 -48.35 35.85 -56.12
+
+CCI
+
+86.08 -46.49 177.07 -56.45 310.93 -25.33 336.83 -47.05
+
+GE
+
+-79.92 -86.60 -75.55 -82.11 -54.76 -72.68 -35.88 -53.76
+
+JPM
+
+43.00 -56.54 -61.95 -83.02 39.20 -55.45 -60.05 -79.65
+
+L
+
+-46.61 -52.66 62.86 -33.29 16.17 -42.56 93.31 -30.41
+
+MCD
+
+-44.34 -45.83 37.51 -29.39 -38.29 -49.65 118.64 -23.19
+
+QCOM
+
+8.85 -58.17 -15.57 -68.83 73.31 -51.96 37.93 -53.48
+
+TER
+
+-10.83 -79.02 -53.66 -80.87 -52.47 -79.84 -40.58 -67.90
+
+USB
+
+-42.19 -61.00
+
+ALL
+
+-79.23 -86.17 -46.13 -78.91 -78.73 -88.13 -52.82 -81.80
+
+BMS
+
+21.47 -53.57 -33.58 -58.07 16.84 -52.31 -25.85 -49.84
+
+-7.45 -61.51 -32.11 -52.67 -37.07 -68.32
+
+EBAY -34.81 -75.34 14.65 -71.71 12.58 -74.13
+
+-7.21 -76.40
+
+HOT
+
+-72.68 -77.02 -57.17 -79.54 -54.13 -68.03 -33.45 -68.50
+
+LNC
+
+-94.43 -97.04 -76.96 -95.17 -89.02 -94.76 -37.69 -85.11
+
+MAC
+
+-84.19 -95.64 -45.33 -88.40 -81.05 -95.66 62.96 -81.08
+
+NWL
+
+-79.23 -88.59 -45.62 -66.01 -59.43 -79.96 -24.29 -65.12
+
+SYK
+
+17.65 -63.13 71.15 -39.39 56.07 -61.22 22.23 -56.56
+
+TSO
+
+136.36 -90.55 713.46 -62.45 464.85 -85.15 669.16 -71.38
+
+YHOO -63.68 -82.50
+Mean
+
+2.36 -68.74 -55.35 -76.90 -43.11 -83.89
+
+-23.07 -70.76 30.37 -66.08 20.15 -65.63 51.12 -63.22
+
+81
+
+Rozdział 5. Eksperymenty
+
+Tablica 5.5: Wyniki strategii „buy&hold” dla zakresu okna optymalizacji 100 dni
+odpowiadajacej
+˛ Konfiguracjom 1-4
+Stock
+
+Ref
+R[%]
+
+DD[%]
+
+ACT
+
+295.15
+
+-57.73
+
+AVB
+
+219.74
+
+-72.07
+
+CCI
+
+882.37
+
+-76.16
+
+GE
+
+-7.67
+
+-84.19
+
+JPM
+
+69.33
+
+-70.11
+
+L
+
+220.79
+
+-66.01
+
+MCD
+
+432.30
+
+-22.88
+
+QCOM
+
+332.92
+
+-48.18
+
+TER
+
+5.40
+
+-90.32
+
+USB
+
+63.69
+
+-76.78
+
+ALL
+
+52.46
+
+-78.58
+
+BMS
+
+71.45
+
+-52.83
+
+EBAY
+
+101.61
+
+-82.56
+
+HOT
+
+212.67
+
+-87.32
+
+LNC
+
+36.93
+
+-93.27
+
+MAC
+
+80.08
+
+-94.39
+
+NWL
+
+1.40
+
+-85.79
+
+SYK
+
+119.70
+
+-59.22
+
+TSO
+
+1246.63
+
+-89.45
+
+YHOO
+
+127.29
+
+-79.39
+
+Mean
+
+228.21
+
+-73.36
+
+82
+
+50000
+
+Equity
+100000 150000
+
+Rozdział 5. Eksperymenty
+
+2006
+
+2008
+GE
+
+2010
+
+2012
+
+2014
+
+2004
+
+2006
+
+2008
+MAC
+
+2010
+
+2012
+
+2014
+
+2004
+
+2006
+
+2008
+SYK
+
+2010
+
+2012
+
+2014
+
+2004
+
+2006
+
+2008
+YHOO
+
+2010
+
+2012
+
+2014
+
+50000
+
+Equity
+150000 250000
+
+100000
+
+Equity
+
+200000
+
+0
+
+Equity
+100000
+250000
+
+2004
+
+Rysunek 5.4: Przykładowe wyniki dla Konfiguracji 4. Kolorem czarnym oznaczono
+szereg czasowy notowań danej spółki, szarym lini˛e kapitału danej spółki. Przyj˛eto,
+że w chwili zero oba portfele rozpoczynały z kwota˛ 100000 jednostek kapitału.
+83
+
+Rozdział 5. Eksperymenty
+
+wyniki zostały zaprezentowane na rysunku 5.5. Wartym zwrócenia szczególnej
+uwagi zjawiskiem jest interesujaca
+˛ własność prezentowanego modelu w tejże
+konfiguracji. Dla trzech z czterech prezentowanych przykładów strategia podj˛eła
+decyzj˛e o pozostaniu poza rynkiem od momentu rozpocz˛ecia si˛e z znaczacego
+˛
+trendu spadkowego na rynku danego aktywa. Decyzja ta pozwoliła na uzyskanie
+znaczaco
+˛ lepszych wyników niż strategia „buy&hold”, szczególnie w zakresie
+minimalizacji maksymalnej procentowej straty.
+Analiza wyników zaprezentowanych dla Konfiguracji od 1. do 8. prowadzi
+do wniosku, iż zwi˛ekszanie próby uczacej
+˛ połaczone
+˛
+z wprowadzeniem zmiennej
+w czasie, ważonej wolumenem funkcji kary oraz dodanie selekcji atrybutów w
+znaczacy
+˛ sposób zwi˛eksza skuteczność proponowanej strategii inwestycyjnej. Z
+uwagi na ten fakt zaproponowany i przeprowadzony został kolejny eksperyment,
+w którym wprowadzone zostały opóźnienia dla poszczególnych wskaźników
+analizy technicznej zgodnie z metoda˛ opisana˛ w rozdziale 4.1.1. Dla każdego ze
+wskaźników f z 4.1 wprowadzone zostało opóźnienie pf = 5 dni. Pozostałe
+parametry konfiguracyjne pozostały niezmienione w stosunku do Konfiguracji 8.
+Rezultaty dla opisywanego eksperymentu znajduja˛ si˛e w tabeli 5.8. Przykładowe
+wyniki symulacji strategii inwestycyjnej znajduja˛ si˛e na rysunku 5.6. Wyniki
+Konfiguracji 9. pokazuja,˛ iż wprowadzenie dodatkowych opóźnień dla wskaźników
+technicznych poprawia skuteczność przewidywania krótkoterminowych trendów.
+Średnia stopa zwrotu wyniosła 168.71% ulegajac
+˛ zwi˛ekszeniu w stosunku do
+Konfiguracji 8. o 76.78%. Jedynie w jednym z dwudziestu przeprowadzony
+eksperymentów w ramach tejże konfiguracji stopa zwrotu za cały okres była
+ujemna. Dla tego przypadku średnia stopa zwrotu pozostała mniejsza niż w
+strategii „buy&hold”, jednakże maksymalna procentowa strata uległa zmniejszeniu
+o 34.08%.
+Badana strategia inwestycyjna dla ostatniej konfiguracji parametrów osiaga
+˛
+
+84
+
+Rozdział 5. Eksperymenty
+
+Tablica 5.6: Wyniki testów dla Konfiguracji 5-8 z Tabeli 5.3
+Stock
+
+Conf. 5
+
+Conf. 6
+
+Conf. 7
+
+Conf. 8
+
+R[%] DD[%] R[%] DD[%] R[%] DD[%] R[%] DD[%]
+ACT
+
+29.76 -56.85 233.09 -46.10 174.14 -52.75 125.76 -57.96
+
+AVB
+
+10.89 -51.21 56.40 -54.16 154.07 -28.17 206.98 -26.57
+
+CCI
+
+-0.47 -75.10 202.31 -77.57 69.31 -68.07 171.67 -55.54
+
+GE
+
+-57.97 -74.66 -36.42 -61.42 -15.73 -38.52 10.72 -30.14
+
+JPM
+
+15.28 -55.45 -38.92 -66.49
+
+2.89 -48.83 -29.73 -51.57
+
+L
+
+23.25 -61.23 59.67 -54.10 150.63 -26.12 151.98 -26.51
+
+MCD
+
+16.42 -25.08 89.59 -22.85 102.36 -21.81 137.99 -22.86
+
+QCOM 53.14 -37.15 187.89 -36.83 152.40 -36.77 207.79 -36.89
+TER
+
+-13.16 -71.16 81.58 -61.95 26.48 -57.81 13.09 -58.60
+
+USB
+
+-49.48 -76.19
+
+ALL
+
+-41.39 -75.50 -31.31 -67.49 -18.72 -63.80 -22.71 -68.87
+
+BMS
+
+0.64 -58.37
+
+-3.54 -37.02 52.73 -29.41
+
+33.17 -52.99 -30.85 -58.75 36.72 -52.39
+
+-5.52 -47.67
+
+EBAY -64.65 -79.96 -24.66 -64.95 -49.24 -76.81 22.42 -59.52
+HOT
+
+-65.96 -83.85 -51.74 -78.07 -16.93 -59.28 66.64 -43.53
+
+LNC
+
+-53.92 -88.67 -36.84 -88.45 15.28 -61.86 62.72 -55.66
+
+MAC
+
+-73.72 -89.31 16.65 -52.83 65.41 -35.92 101.76 -28.31
+
+NWL
+
+-28.14 -70.86 18.23 -45.09 56.54 -48.11 42.15 -48.77
+
+SYK
+
+-21.72 -52.07 -32.82 -62.85
+
+TSO
+
+-6.96 -43.13
+
+29.34 -69.31 50.74 -77.67 112.30 -65.66 451.12 -54.18
+
+YHOO -52.70 -75.99
+Mean
+
+0.02 -54.89
+
+2.52 -59.67
+
+8.92 -59.40 97.91 -41.75
+
+-15.60 -66.13 35.79 -59.78 51.16 -49.70 92.93 -44.37
+
+85
+
+Rozdział 5. Eksperymenty
+
+Tablica 5.7: Wyniki strategii „buy&hold” dla zakresu okna optymalizacji 500 dni
+odpowiadajacej
+˛ Konfiguracjom 5-9
+Stock
+
+Ref
+R[%]
+
+DD[%]
+
+ACT
+
+355.99
+
+-43.29
+
+AVB
+
+84.08
+
+-72.07
+
+CCI
+
+357.20
+
+-76.16
+
+GE
+
+-28.52
+
+-84.19
+
+JPM
+
+39.12
+
+-70.11
+
+L
+
+111.04
+
+-66.01
+
+MCD
+
+194.21
+
+-22.88
+
+58.31
+
+-48.18
+
+TER
+
+3.48
+
+-83.77
+
+USB
+
+21.71
+
+-76.78
+
+ALL
+
+5.84
+
+-78.58
+
+BMS
+
+36.06
+
+-52.83
+
+EBAY
+
+-7.96
+
+-82.56
+
+HOT
+
+48.68
+
+-87.32
+
+LNC
+
+-2.51
+
+-93.27
+
+MAC
+
+1.52
+
+-94.39
+
+NWL
+
+21.26
+
+-85.79
+
+SYK
+
+55.40
+
+-59.22
+
+TSO
+
+215.81
+
+-89.45
+
+YHOO
+
+-9.75
+
+-79.39
+
+Mean
+
+78.05
+
+-72.31
+
+QCOM
+
+86
+
+20000
+
+Equity
+60000 100000
+
+Rozdział 5. Eksperymenty
+
+2006
+
+2008
+
+2010
+
+2012
+
+2014
+
+2010
+MAC
+
+2012
+
+2014
+
+2010
+
+2012
+
+2014
+
+2010
+YHOO
+
+2012
+
+2014
+
+0
+
+Equity
+100000 200000
+
+GE
+
+2008
+
+2006
+
+2008
+
+Equity
+60000 100000
+
+160000
+
+2006
+
+50000
+
+Equity
+150000
+
+SYK
+
+2006
+
+2008
+
+Rysunek 5.5: Przykładowe wyniki dla Konfiguracji 8. Kolorem czarnym oznaczono
+szereg czasowy notowań danej spółki, szarym lini˛e kapitału danej spółki. Przyj˛eto,
+że w chwili zero oba portfele rozpoczynały z kwota˛ 100000 jednostek kapitału.
+87
+
+Rozdział 5. Eksperymenty
+
+najlepsze rezultaty w kontekście stosunku stopy zwrotu przypadajacej
+˛
+na
+jednostk˛e ryzyka. W porównaniu do poprzednich wyników prezentowana strategia
+inwestycyjna w połaczeniu
+˛
+ze zmienna˛ funkcja˛ kary ważona˛ wolumenem oraz z
+selekcja˛ atrybutów i dodatkowymi opóźnieniami dla poszczególnych wskaźników
+jeszcze dokładniej przewidywała trendy spadkowe i wycofywała si˛e z inwestycji w
+tychże okresach.
+Istotna w tym miejscu jest uwaga dotyczaca
+˛
+zastosowania procedury
+walk-forward. Używa ona w kolejnych krokach optymalizacyjnych danych,
+których znaczaca
+˛
+cz˛eść była używana w poprzednich iteracjach. Wynika
+to z różnicy pomi˛edzy długościa˛ okna optymalizacji i testowania, której
+to rozpi˛etość podyktowana jest ch˛ecia˛ przedstawiania klasyfikatorowi jak
+najnowszych danych. Jest to jednak procedura kosztowna obliczeniowo, gdyż,
+zgodnie z oznaczeniami wprowadzonymi w rozdziale 5.2, dla zadanego okna
+testowego oraz optymalizacyjnego o długościach odpowiednio l oraz m konieczne
+jest wykonanie:
+b(kQk − m)/l + 1c
+
+(5.9)
+
+reoptymalizacji, gdzie kQk jest liczba˛ kwotowań przypadajacych
+˛
+dla pojedynczej
+trajektorii. Dla wartości l, m oraz kQk odpowiednio 10, 100 oraz 2577 użytych w
+eksperymentach dla przypadku przetestowania pojedynczego szeregu czasowego
+liczba reoptymalizacji wynosi 249 a dla całego zbioru testowego złożonego
+z 20 szeregów 4980. Zaprezentowane konfiguracje wskazuja˛ raczej kierunek
+poszukiwań niźli rekomendowane wartości.
+
+88
+
+Rozdział 5. Eksperymenty
+
+Tablica 5.8: Wyniki testów dla Konfiguracji 9. z Tabeli 5.3
+Stock
+
+Conf. 9
+R[%]
+
+DD[%]
+
+ACT
+
+423.89
+
+-40.64
+
+AVB
+
+134.37
+
+-24.00
+
+CCI
+
+497.46
+
+-28.58
+
+GE
+
+1.01
+
+-31.64
+
+JPM
+
+13.62
+
+-41.18
+
+L
+
+160.72
+
+-26.10
+
+MCD
+
+140.20
+
+-22.97
+
+68.94
+
+-49.14
+
+TER
+
+201.91
+
+-53.01
+
+USB
+
+49.20
+
+-31.80
+
+ALL
+
+16.59
+
+-46.74
+
+BMS
+
+30.89
+
+-28.56
+
+EBAY
+
+18.74
+
+-54.02
+
+HOT
+
+54.19
+
+-43.14
+
+LNC
+
+70.76
+
+-57.10
+
+MAC
+
+48.58
+
+-31.09
+
+NWL
+
+-8.98
+
+-54.05
+
+SYK
+
+77.29
+
+-42.25
+
+TSO
+
+1299.46
+
+-36.90
+
+75.45
+
+-42.69
+
+168.71
+
+-39.28
+
+QCOM
+
+YHOO
+Mean
+
+89
+
+20000
+
+Equity
+60000 100000
+
+Rozdział 5. Eksperymenty
+
+2006
+
+2008
+
+2010
+
+2012
+
+2014
+
+2010
+MAC
+
+2012
+
+2014
+
+2010
+
+2012
+
+2014
+
+2010
+YHOO
+
+2012
+
+2014
+
+0
+
+50000
+
+Equity
+
+150000
+
+GE
+
+2008
+
+2006
+
+2008
+
+60000
+
+Equity
+120000
+
+180000
+
+2006
+
+50000
+
+Equity
+
+150000
+
+SYK
+
+2006
+
+2008
+
+Rysunek 5.6: Przykładowe wyniki dla Konfiguracji 9. Kolorem czarnym oznaczono
+szereg czasowy notowań danej spółki, szarym lini˛e kapitału danej spółki. Przyj˛eto,
+że w chwili zero oba portfele rozpoczynały z kwota˛ 100000 jednostek kapitału.
+90
+
+Rozdział 5. Eksperymenty
+
+5.4
+5.4.1
+
+Strategia inwestycyjna - bitcoin
+Wprowadzenie
+
+Bitcoin jest zdecentralizowanym protokołem typu peer-to-peer dla celów obrotu
+pieniadzem
+˛
+elektronicznym. Jest bazuje na algorytmie typu proof-of-work, który
+używa kryptograficznej funkcji skrótu dla potwierdzenia kolejnych bloków
+transakcji. Rol˛e akceptantów kolejnych bloków transakcji pełnia˛ podmioty b˛edace,
+˛
+które nazywane sa˛ kopaczami lub górnikami (ang. miners). Nazwa wywodzi si˛e z
+faktu, iż proces potwierdzania transakcji ma wiele wspólnego z poszukiwaniem
+złota lub innych cennych surowców. Nie wchodzac
+˛ w szczegóły, proces
+potwierdzania transakcji polega na próbie znalezienia takiej 32-bitowej wartości
+(nonce), która dodana do bloku spowoduje, iż wartość funkcji skrótu wygenerowana
+dla takiego złaczenia
+˛
+b˛edzie rozpoczynać si˛e od n zer. Jednostki realizujace
+˛ te
+obliczenia rywalizuja˛ mi˛edzy soba,˛ aby zdobyć nagrod˛e za znalezienie takiej
+wartości. Nagroda˛ jest konkretna liczba przyznanych bitcoinów, która zależy
+od kilku czynników, m.in. od liczby jednocześnie aktywnych kopaczy. Aby ja˛
+zdobyć konieczne jest zaangażowanie odpowiedniej mocy obliczeniowej ponoszac
+˛
+stosowne koszta zwiazane
+˛
+z zakupem i amortyzacja˛ sprz˛etu oraz elektrycznościa.˛
+Im wi˛ecej jednostek zaangażowanych jest w ten proces, tym trudniejsze staje si˛e
+znalezienie żadanej
+˛
+wartości funkcji skrótu z uwagi na fakt, iż rośnie liczba n zer
+wiodacych
+˛
+wymaganych do akceptacji bloku. Miara opisujaca
+˛ wartość parametru
+nazywa si˛e trudnościa˛ (ang. difficulty) i jest regulowana automatycznie przez
+protokół.
+Bitcoin został zaproponowany przez Satoshiego Nakamoto w 2008 roku
+[Nakamoto, 2008]. Od tego czasu ekosystem bitcoina rozwijał si˛e bardzo
+dynamicznie. Od samego poczatku
+˛
+wokół idei kryptowalut prowadzona była
+dyskusja dotyczaca
+˛ ich fundamentalnych własności, które maja˛ odróżniać je od
+
+91
+
+Rozdział 5. Eksperymenty
+
+walut tradycyjnych. Dyskusja na ten temat nie jest przedmiotem niniejszej pracy.
+Wi˛ecej szczegółów, może zostać odnalezionych w [Androulaki et al., 2013] oraz
+[Koshy et al., 2014]. Przez długi czas algorytm proof-of-work wykorzystywany w
+procesie potwierdzania transakcji uchodził za wyjatkowo
+˛
+bezpieczny w kontekście
+potencjalnych ataków. W ostatnim czasie w dyskusji pojawia si˛e coraz wi˛ecej
+watpliwości
+˛
+dotyczacych
+˛
+tej kwestii [Eyal and Sirer, 2014].
+Pomimo pewnych zagrożeń protokół oraz waluta bitcoin zyskuja˛ coraz wi˛ecej
+użytkowników. Zarówno świat akademicki, jak również biznesowy szukaja˛ nowych
+rozwiazań
+˛
+opartych na tymże protokole. W ostatnich latach powstało wiele giełd
+kwotujacych
+˛
+bitcoiny. Główna˛ ich zaleta,˛ tak jak w pozostałych wypadkach
+scentralizowanych instytucji zajmujacych
+˛
+si˛e pośrednictwem w wymianie aktywów
+finansowych, jest zwi˛ekszanie płynności, ułatwianie handlu dzi˛eki wykorzystaniu
+platform obrotu, a w konsekwencji rynkowa waluacja bitcoina. Podobnie do
+tradycyjnych rynków finansowych na rynku bitcoina spotkać można inwestorów
+długoterminowych, którzy zainteresowani sa˛ dywersyfikacja˛ swojego portfela w
+cz˛eści wymieniajac
+˛ waluty tradycyjne na bitcoin. Oprócz nich aktywni sa˛ również
+traderzy zainteresowani krótkoterminowa˛ spekulacja.˛ Tak jak to mam miejsce
+na tradycyjnych rynkach finansowych możliwe jest stworzenie automatycznych
+strategii inwestycyjnych. Można pokusić si˛e o stwierdzenie, iż jest to wspierane
+„z definicji” gdyż platformy obrotu bitcoinem nie miały nigdy tradycyjnych
+parkietów giełdowych i od poczatku
+˛ swojego działania dostarczaja˛ programistyczne
+API umożliwiajace
+˛ połaczenia
+˛
+i handel za pośrednictwem zewn˛etrznych aplikacji.
+W niniejszym podrozdziale przedstawiony zostanie eksperyment polegajacy
+˛
+na aplikacji automatycznej strategii inwestycyjnej wykorzystujacej
+˛
+metody
+uczenia maszynowego, w szczególności VW-SVM, w sposób analogiczny do
+zaprezentowanego w rozdziale 5.3.
+
+92
+
+Rozdział 5. Eksperymenty
+
+5.4.2
+
+Modele predykcyjne
+
+W celu weryfikacji czy możliwe jest skonstruowanie skutecznej automatycznej
+strategii inwestycyjnej opartej na rynku waluty bitcoin użyto metod znanych do
+tej pory w literaturze oraz algorytmu opartego o proponowana˛ funkcj˛e kary dla
+klasyfikatora SVM. W pierwszym kroku zbadana została strategia inwestycyjna
+oparta na wykładniczej średniej ruchomej (EMA). Nast˛epnie zbadano znacznie
+bardziej złożony algorytm, który bezpośrednio wykorzystuje klasyfikator SVM
+oraz koncepcj˛e „box theory” opisana˛ w [Wen et al., 2010]. W ostatnim kroku
+testy przeprowadzono dla klasyfikatora VW-SVM z funkcja˛ kary uzależniona˛ od
+wartości wolumenu transakcyjnego w poszczególnych chwilach czasowych.
+Wykładnicza średnia ruchoma
+Pierwsza ze strategii, która została skonstruowana opierała si˛e o sygnały
+generowane przez wskaźnik techniczny b˛edacy
+˛ wykładnicza˛ średnia˛ ruchoma˛ (ang.
+exponential moving average, EMA). Przyporzadkowuje
+˛
+on wi˛eksze wagi nowszym
+kwotowaniom bazujac
+˛ na założeniu, iż niosa˛ one bardziej adekwatna˛ informacj˛e.
+EMA dla momentu jest zdefiniowana w nast˛epujacy
+˛ sposób:
+Wykładnicza˛ średnia˛ ruchoma˛ w chwili t o długości n oznaczana˛
+EM Ant nazywamy obliczone dla szeregu czasowego cen aktywa
+finansowego wyrażenie postaci:
+EM Ant = (Pt − EM At−1 )α + EM At−1
+
+(5.10)
+
+gdzie Pt jest cena˛ dla momentu t, α jest zdefiniowana jako 2/(n + 1) a
+wartość EM A0 przyjmuje wartość ceny w chwili t = 0 czyli
+EM A0 = P0 .
+
+93
+
+Rozdział 5. Eksperymenty
+
+Sygnał służacy
+˛ do zakupu badź
+˛ sprzedaży jest generowany, gdy EM At < Pt
+lub odpowiednio EM At > Pt . Niektórzy z praktyków rynków finansowych
+wierza˛ w istnienie pewnych predefiniowanych wartości n, które sprawdzaja˛ si˛e
+dobrze niezależnie od tego jakich konkretnie aktywów dotycza.˛ W niniejszym
+eksperymencie przyj˛eto zupełnie odmienne podejście. W celu re-optymalizacji
+co każde 100 kwotowań zastosowana została opisana w rozdziale 5.2 procedura
+walk-forward. W tymże kroku wykonana została ekstensywna procedura
+poszukiwania metoda˛ grid-search optymalnej wartości n maksymalizujacej
+˛ zysk
+na oknie ostatnich 200 kwotowań.
+Maszyna Wektorów Nośnych z wykorzystaniem Box Theory
+Model oparty o teori˛e „box theory” oraz klasyfikator SVM (Box SVM)
+przedstawiony został w [Wen et al., 2010]. Teoria ta zakłada, że przebicie ceny
+danego aktywa jednej z linii wyznaczonej przez minimum oraz maksimum ceny
+tegoż aktywa w zadanym horyzoncie czasowym stanowi informacj˛e o wystapieniu
+˛
+odpowiednio sygnału sprzedaży lub kupna. Wejście do opisywanego modelu
+stanowia˛ wskaźniki analizy technicznej oraz miary statystyczne, które zgromadzone
+sa˛ w Tabeli 5.9.
+Maszyna wektorów nośnych ze zmienna˛ w czasie funkcja˛ kary
+W [Zbikowski, 2015], klasyfikator SVM wraz ze zmienna˛ w czasie funkcja˛ kary
+4.14 został użyty z kilkoma rodzajami wskaźników analizy technicznej. W ramach
+niniejszego eksperymentu wykorzystano model tam przedstawiony a wskaźniki
+użyte jako wejście do modelu klasyfikacji zgromadzone sa˛ w Tabeli 5.9.
+
+94
+
+Rozdział 5. Eksperymenty
+
+Rysunek 5.7: Architektura przykładowego systemu tradingowego opartego na
+przewidywaniu okna oscylacji ceny instrumentu z wykorzystaniem klasyfikatora
+SVM [Wen et al., 2010]
+
+5.4.3
+
+Dane testowe
+
+Na potrzeby prezentowanego eksperymentu zostały użyte dane z jednej z
+najwi˛ekszych, w zakresie dziennego wolumenu transakcji, giełd bitcoin Bitstamp (www.bitstamp.com). Dane dost˛epne sa˛ za pośrednictwem dedykowanego
+API transakcyjnego. W celu integracji skorzystano z biblioteki XChange
+(https://github.com/timmolter/XChange), która umożliwia zunifikowana˛ integracj˛e
+z wieloma giełdami bitcoin. Dane w postaci szczytu ksia˛żki zleceń zostały złaczone
+˛
+do postaci 15-sto minutowych agregatów. Jako cen˛e z momentu Pt przyj˛eto cen˛e
+zamkni˛ecia dla agregatu z chwili t. Zbiór dost˛epnych danych stanowi 2221 wartości
+i pokrywa okres od 9 stycznia 2015 do 2 lutego 2015 roku.
+Koszty transakcyjne różnia˛ si˛e w zależności od giełdy i wolumenu obrotu w
+czasie. Na potrzeby eksperymentu przyj˛eto koszty transakcyjne na poziomie 0.2%,
+który analizujac
+˛ ofert˛e giełd wydaje si˛e uzasadniona˛ wartościa.˛
+
+95
+
+Rozdział 5. Eksperymenty
+
+Tablica 5.9: Wskaźniki użyte jako wejścia dla modelu Box SVM oraz VW-SVM
+(n oznacza długość danych użytych w celu obliczeń; t jest indeksem oznaczajacym
+˛
+konkretny moment w szeregu czasowym wartości wskaźników)
+Indicator Formula
+Close
+price
+
+Box SVM VW-SVM
+
+Pt
+
++
+
++
+
+Volume Vt
+
++
+
++
+
+-
+
++
+
++
+
++
+
++
+
++
+
+-
+
++
+
+-
+
++
+
+-
+
++
+
+-
+
++
+
+-
+
++
+
+Average µ =
+t
+Price
+
+Pt
+
+Standard σ =
+t
+Deviation
+
+q Pt
+
+k=0
+
+Pt−k
+
+t
+2
+k=0 (Pt−k −µt ) )
+
+t
+
+RSItn = 100 −
+
+100
+1+RStn
+
+Pn
+k=0 Uk
+Pn
+k=0 Dk
+
+Relative RS n =
+t
+(
+Strength
+Pt − Pt−1 if Pt ≥ Pt−1
+Index
+Ut =
+0
+otherwise
+(
+Pt−1 − Pt if Pt < Pt−1
+Dt =
+0
+otherwise
+Daily
+rate of Rt =
+return
+
+Pt
+Pt−1
+M axP n −P
+
+t
+t
+%Rtn = 100 M axP n −M
+inP n
+t
+
+t
+
+%R
+M axPtn = max{Pt , Pt−1 , . . . , Pt−n }
+Oscillator
+M inPtn = min{Pt , Pt−1 , . . . , Pt−n }
+Average AT Rn = 1 Pn T Rt−i
+t
+i=0
+n
+True
+C
+C
+T Rt = max{PtH − PtL , PtH − Pt−1
+, PtL − Pt−1
+}
+Range
+n(+)
+
+Vortex
+
+Pd
+
+Vt
+
+=
+
+n(−)
+Vt
+
+=
+
+H
+L
+k=0 (Pt−k −Pt−k )
+Pd
+T
+R
+Pd k=0L t−kH
+k=0 (Pt−k −Pt−k )
+Pd
+k=0 T Rt−k
+
+
+
+OBVt−1 + Vt
+On
+Balance OBVt = OBVt−1 − Vt
+
+
+Volume
+OBVt−1
+
+if Pt > Pt−1
+if Pt < Pt−1
+if Pt = Pt−1
+96
+
+Rozdział 5. Eksperymenty
+
+Tablica 5.10: Wyniki przeprowadzonych testów dla modeli EMA, Box SVM oraz
+VW-SVM. R jest stopa˛ zwrotu za cały okres testowy, DD oznacza maksymalna˛
+strat˛e na zadanym okresie, która została poniesiona przez dany model.
+R[%]
+
+DD[%]
+
+-59.11
+
+64.30
+
+Box SVM
+
+10.58
+
+25.94
+
+VW-SVM
+
+33.52
+
+22.88
+
+4.86
+
+30.90
+
+EMA
+
+Buy & Hold
+
+5.4.4
+
+Wyniki eksperymentów
+
+W ramach eksperymentów zastosowana została metoda testowania walk-forward,
+która jest rekomendowana˛ metoda˛ testowania dla modeli uczenia maszynowego
+dedykowanych do rozwiazywania
+˛
+problemów bazujacych
+˛
+o szeregi czasowe. Każdy
+z modeli opisanych w rozdziale 5.4.2 może otworzyć krótka˛ lub długa˛ pozycj˛e.
+Nie jest to bezpośrednio możliwe w obecnej chwili na giełdzie Bitstamp. Jednakże,
+wiele konkurencyjnych podmiotów oferuje taka˛ możliwość dla swoich klientów.
+Z uwagi na ten fakt, przyj˛eliśmy założenie o możliwości prowadzenia krótkiej
+sprzedaży.
+Każdy z modeli opisanych w rozdziale 5.4.2 został oddzielnie przetestowany
+wykorzystujac
+˛
+
+dane
+
+opisane
+
+w
+
+rozdziale
+
+5.4.3.
+
+Podsumowanie
+
+tychże
+
+eksperymentów zostało zaprezentowane w Tabeli 5.10. W każdym z modeli
+założono, iż inicjalny kapitał wynosi 100000$.
+W celu zmierzenia poziomu ryzyka obliczona została wartość maksymalnej
+procentowej straty obliczonej zgodnie z 5.8. Jako kryterium oceny skuteczności
+proponowanych modeli została przedstawiona wartość stopy zwrotu obliczona
+wzgl˛edem całego okresu testowego. Wszystkie rezultaty modeli zostały porównane
+do strategii „buy&hold”, która zakłada otwarcie pozycji na poczatku
+˛ a zamkni˛ecie
+
+97
+
+Rozdział 5. Eksperymenty
+
+na końcu okresu testowego.
+Za każdym razem kiedy pozycja jest otwierana przez strategi˛e inwestycyjna˛
+angażowany jest cały kapitał dost˛epny w danym momencie. Na uwag˛e
+zasługuje tutaj fakt braku jakiegokolwiek zarzadzania
+˛
+pozycja.˛ Ułatwia to z
+pewnościa˛ porównywanie wyników poszczególnych algorytmów mi˛edzy soba,˛ a
+w szczególności porównywanie do strategii „buy&hold”. Sam sposób dobierania
+odpowiedniej wielkości pozycji może być przedmiotem osobnych badań (jak na
+przykład w [Kelly Jr., 1956]).
+Model wykładniczej średniej ruchomej stracił w okresie testowym 59.11%
+kapitału. Jak można zauważyć na Rysunku 5.8 wartość kapitału dla modelu
+EMA maleje na przestrzeni całego okresu testowego w jednostajny sposób.
+Wielkość maksymalnej straty dla tego modelu wynosi 64.30%. Oba te rezultaty
+sa˛ najgorszymi pośród testowanych modeli. Dla porównania strategia „buy&hold”
+osiagn˛
+˛ eła znacznie lepsze wyniki na poziomie 4.86% jeśli chodzi o stop˛e zwrotu
+oraz 30.9% dla wartości maksymalnej straty. Na podstawie analizy tej cz˛eści
+eksperymentów można śmiało stwierdzić, iż nawet dla tak niedojrzałego rynku
+jakim jest rynek waluty bitcoin proste strategie inwestycyjne oparte o analiz˛e
+techniczna˛ nie pozwalaja˛ na osiaganie
+˛
+satysfakcjonujacych
+˛
+rezultatów.
+Pierwsza˛ ze strategii, która wykorzystywała algorytm uczenia maszynowego
+jaka˛ integralna˛ cz˛eść logiki działania, była strategia Box SVM. Osiagn˛
+˛ eła ona
+wynik 10.58 jeśli chodzi o stop˛e zwrotu, co jest ulepszeniem o 5.72% w stosunku
+do strategii „buy&hold” (patrz Rysunek 5.9). Jeśli chodzi o poziom maksymalnej
+procentowej straty w okresie testowania to ukształtowała si˛e ona na poziomie
+25.94%, co w dalszym ciagu
+˛ oznacza wysokie ryzyko inwestycyjne szczególnie,
+że wynik ten otrzymano w relatywnie krótkim okresie czasowym b˛edacym
+˛
+przedmiotem eksperymentu. Jednakże, w stosunku do strategii „buy&hold”
+strategia Box SVM osiagn˛
+˛ eła popraw˛e 4.96% jeśli chodzi o maksymalna˛ strat˛e na
+
+98
+
+50000
+
+Equity
+100000
+
+150000
+
+Rozdział 5. Eksperymenty
+
+Jan 15
+
+Jan 20
+
+Jan 25
+EMA
+
+Jan 30
+
+Feb 04
+
+80000
+
+100000
+
+Equity
+120000
+
+140000
+
+Rysunek 5.8: Wyniki modelu EMA. Czarnym kolorem oznaczono lini˛e kapitału
+strategii „buy&hold”, szarym oznaczono lini˛e kapitału strategii EMA.
+
+Jan 20
+
+Jan 25
+SVMOscillationBox
+
+Jan 30
+
+Feb 04
+
+Rysunek 5.9: Wyniki modelu Box SVM. Czarnym kolorem oznaczono lini˛e kapitału
+strategii „buy&hold”, szarym oznaczono lini˛e kapitału strategii Box SVM.
+
+99
+
+80000
+
+100000
+
+Equity
+120000
+
+140000
+
+Rozdział 5. Eksperymenty
+
+Jan 20
+
+Jan 25
+VW−SVM
+
+Jan 30
+
+Feb 04
+
+Rysunek 5.10: Wyniki modelu VW-SVM. Czarnym kolorem oznaczono lini˛e
+kapitału strategii „buy&hold”, szarym oznaczono lini˛e kapitału strategii VW-SVM.
+zadanym okresie.
+Druga ze strategii wykorzystujacych
+˛
+algorytmy uczenia maszynowego
+VW-SVM, która również oparta jest na klasyfikatorze SVM lecz ze
+zoptymalizowana˛ dla problemów analizy szeregów czasowych funkcja˛ kary,
+osiagn˛
+˛ eła wynik 33.58% jeśli chodzi stop˛e zwrotu za okres testowy. Jej krzywa
+kapitału została zilustrowana na rysunku 5.10. Stopa zwrotu osiagni˛
+˛ eta przez
+strategi˛e VW-SVM jest najwyższa˛ wśród badanych modeli. Jest o 28.66% wyższa
+niż dla strategii „buy&hold” i 23% wyższa niż dla strategii Box SVM. Ponadto,
+ryzyko mierzone maksymalna˛ procentowa˛ strata˛ dla strategii VM-SVM jest
+również najmniejsze i wynosi 22.88% . Miara maksymalnej straty jest o 8.02%
+mniejsza od maksymalnej straty dla strategii „buy&hold” oraz o 3.14% mniejsza
+dla przypadku strategii Box SVM.
+
+100
+
+Rozdział 6
+Podsumowanie
+Words can be meaningless. If they
+are used in such a way that no sharp
+conclusions can be drawn
+Richard Feynman
+
+W niniejszej pracy postawiona została teza, iż funkcja kary klasyfikatora
+maszyny wektorów nośnych uwzgl˛edniajaca
+˛ dla wag poszczególnych przykładów
+ze zbioru trenujacego
+˛
+zależność funkcyjna˛ od wolumenu transakcyjnego wpływa
+pozytywnie na skuteczność predykcji krótkoterminowych trendów dla finansowych
+szeregów czasowych oraz umożliwia stworzenie skutecznej strategii inwestycyjnej
+wykorzystujacej
+˛ proponowany algorytm.
+W poczatkowych
+˛
+rozdziałach dokonano przegladu
+˛
+metod statystycznych,
+ekonometrycznych oraz algorytmów uczenia maszynowego, które stosowane
+sa˛ w zadaniach predykcji oraz klasyfikacji finansowych szeregów czasowych.
+Przedstawiona została literatura dotyczaca
+˛ badań w zakresie aplikacji algorytmów
+uczenia
+
+maszynowego
+
+w
+
+zakresie
+
+konstrukcji
+
+automatycznych
+
+strategii
+
+inwestycyjnych. Omówione zostały charakterystyczne dla finansowych szeregów
+czasowych własności, które wyróżniaja˛ je pośród innych typów danych oraz
+101
+
+Rozdział 6. Podsumowanie
+
+sprawiaja,˛ iż ich analiza wymaga zastosowania zupełnie innych metod. Dyskusja ta
+przeprowadzona została w kontekście klasyfikatora Maszyny Wektorów Nośnych
+oraz stosowanej dla niego funkcji kary. Zauważone zostały pewne własności, które
+wydawały si˛e nieadekwatne dla problemu analizy danych niestacjonarnych.
+W cz˛eści głównej pracy przedstawiona została propozycja nowej funkcji
+kary dla klasyfikatora SVM wykorzystywanego w analizie finansowych
+szeregów czasowych. Nast˛epnie przeprowadzona została weryfikacja skuteczności
+klasyfikacji krótkoterminowych trendów na rynkach akcji z jej użyciem. Otrzymane
+wyniki zostały poddane weryfikacji istotności statystycznej z użyciem testu
+parametrycznego Welch’a. Otrzymane wyniki pozwalały na stwierdzenie, iż z
+wysokim prawdopodobieństwem proponowana funkcja kary w statystycznie istotny
+sposób wpływa na zwi˛ekszenie parametrów dokładności oraz czułości klasyfikacji.
+W dalszej kolejności przeprowadzone zostały empiryczne testy, które miały
+za zadanie zbadanie czy proponowana funkcja kary dla klasyfikatora SVM
+oprócz pozytywnego wpływu na skuteczność predykcji krótkoterminowych
+trendów pozwala również na wykorzystanie opartego na niej klasyfikatora
+VW-SVM do skonstruowania skutecznej strategii inwestycyjnej. Przeprowadzone
+zostały dwa niezależne eksperymenty. Pierwszy analizował 20 spółek z
+amerykańskiego indeksu S&P500. W drugim analizie poddano kwotowania cen
+kryptowaluty bitcoin. W obu przypadkach dla celów testów wykorzystano analiz˛e
+walk-forward. Wyniki klasyfikatora SVM wykorzystujacego
+˛
+proponowana˛ funkcj˛e
+kary porównano z wynikami analogicznej strategii inwestycyjnej z klasyfikatorem
+bazowym.
+Wyniki przeprowadzonych eksperymentów pokazały, iż zdolność bazowego
+klasyfikatora SVM w zastosowaniach konstrukcji automatycznych strategii
+inwestycyjnych jest ograniczona. Jednakże, wprowadzenie usprawnień takich jak
+selekcja zmiennych algorytmem Fisher’a oraz zastosowanie proponowanej funkcji
+
+102
+
+Rozdział 6. Podsumowanie
+
+kary niezależnie polepsza otrzymywane rezultaty. Interesujac
+˛ a˛ właściwościa˛
+proponowanej strategii inwestycyjnej jest fakt, iż dla wielu momentów w czasie,
+charakterystycznych dla okresów wysokiej zmienności oraz zwiazanej
+˛
+z nia˛
+niepewności, strategia zawiesza składanie zleceń.
+Reasumujac,
+˛ najważniejsze oryginalne rozwiazania
+˛
+przedstawione w pracy
+obejmuja:
+˛
+• zaproponowanie nowej, zmiennej w czasie funkcji kary dla klasyfikatora
+SVM opartej o zmiany wolumenu transakcyjnego,
+• opracowanie automatycznej strategii inwestycyjnej wykorzystujacej
+˛
+ww.
+klasyfikator przeznaczonej do handlu na rynkach akcji oraz rynkach
+walutowych,
+• opracowanie architektury systemu informatycznego, którego zadaniem
+jest backtesting strategii inwestycyjnych w sposób generyczny z
+zachowaniem najlepszy wzorców i praktyk stosowanych w tego rodzaju
+testach (optymalizacja walk-forward oraz wbudowany model kosztów
+transakcyjnych).
+Przedstawione wyniki eksperymentów wraz z ich statystyczna˛ analiza˛ istotności
+pozwalaja˛ na stwierdzenie, iż przedstawiona teza została udowodniona.
+Pomimo, iż badana strategia inwestycyjna wykorzystujaca
+˛ zmienna˛ w czasie
+funkcj˛e kary przynosi zadowalajace
+˛ rezultaty, dalsze badania wydaja˛ si˛e być
+konieczne. Jednym z obszarów zainteresowań moga˛ być z pewnościa˛ kolejne
+grupy funkcji kary tworzace
+˛ nowe rodziny klasyfikatorów przystosowane do
+analizy niestacjonarnych szeregów czasowych. Z aplikacyjnego punktu widzenia,
+zamiast zwykłego wolumenu transakcyjnego, jako miara użyta w funkcji kary
+(wykorzystywana do konstrukcji współczynnika wag) mogłaby zostać zastosowana
+zmienność mierzona odchyleniem standardowym dziennych zmian szeregu cen.
+103
+
+Rozdział 6. Podsumowanie
+
+Zmienne wejściowe użyte do trenowania modelu sa˛ pochodna˛ bazowego
+szeregu czasowego. Wartościowe wydaje si˛e dołaczenie
+˛
+danych z otoczenia
+makroekonomicznego,
+
+jak
+
+również
+
+kwantyfikowalnych
+
+miar
+
+dotyczacych
+˛
+
+wewn˛etrznej kondycji przedsi˛ebiorstw (dla przypadku szeregów akcji) oraz
+informacji o strukturze ksia˛żki zleceń na dana˛ chwil˛e.
+Nadmienić należy, iż proponowana funkcja kary może z powodzeniem
+zostać, po pewnych modyfikacjach, zastosowana w innych algorytmach uczenia
+maszynowego takich jak sieci neuronowe czy regresja logistyczna.
+
+104
+
+Bibliografia
+[Androulaki et al., 2013] Androulaki, E., Karame, G., Roeschlin, M., Scherer, T.,
+and Capkun, S. (2013). Evaluating User Privacy in Bitcoin. In Sadeghi, A.-R.,
+editor, Financial Cryptography and Data Security, volume 7859 of Lecture Notes
+in Computer Science, pages 34–51. Springer Berlin Heidelberg.
+[Aronson, 2007] Aronson, D. (2007).
+
+Evidence-Based Technical Analysis:
+
+Applying the Scientific Method and Statistical Inference to Trading Signals. John
+Wiley And Sons.
+[Bahrammirzaee, 2010] Bahrammirzaee, A. (2010).
+
+A comparative survey of
+
+artificial intelligence applications in finance: artificial neural networks, expert
+system and hybrid intelligent systems. Neural Computing and Applications,
+19(8):1165–1195.
+[Bollen et al., 2011] Bollen, J., Mao, H., and Zeng, X. (2011).
+
+Twitter mood
+
+predicts the stock market. Journal of Computational Science, 2(1):1–8.
+[Botes and Siepman, 2010] Botes, E. and Siepman, D. (2010).
+
+The Vortex
+
+Indicator. Technical Analysis of Stocks & Commodities, 28(1):20–30.
+[Breiman, 2001] Breiman, L. (2001).
+
+Random forests.
+
+45(1):5–32.
+
+105
+
+Machine learning,
+
+Bibliografia
+
+[Brown et al., 1998] Brown, S. J., Goetzmann, W. N., and Kumar, A. (1998). The
+Dow theory: William Peter Hamilton’s track record reconsidered. The Journal
+of finance, 53(4):1311–1333.
+[Burges, 1998] Burges, C. (1998). A Tutorial on Support Vector Machines for
+Pattern Recognition. Data Mining and Knowledge Discovery, 2:121–167.
+[Chang and Lin, 2001] Chang, C.-c. and Lin, C.-j. (2001). LIBSVM : A Library for
+Support Vector Machines. Technical report, Department of Computer Science
+and Information Engineering, National Taiwan University.
+[Chavarnakul and Enke, 2008] Chavarnakul, T. and Enke, D. (2008). Intelligent
+technical analysis based equivolume charting for stock trading using neural
+networks. Expert Systems with Applications, 34(2):1004–1017.
+[Chen and Lin, 2006] Chen, Y.-W. and Lin, C.-J. (2006). Combining SVMs with
+Various Feature Selection Strategies. In Feature extraction, pages 315—-324.
+[Chu et al., 2009] Chu, H.-H., Chen, T.-L., Cheng, C.-H., and Huang, C.-C. (2009).
+Fuzzy dual-factor time-series for stock index forecasting. Expert Systems with
+Applications, 36(1):165–171.
+[Cowles 3rd, 1933] Cowles 3rd, A. (1933). Can stock market forecasters forecast?
+Econometrica: Journal of the Econometric Society, pages 309–324.
+[Dai et al., 2012] Dai, W., Shao, Y. E., and Lu, C.-J. (2012). Incorporating feature
+selection method into support vector regression for stock index forecasting.
+Neural Computing and Applications, 23(6):1551–1561.
+[Davies, 2004] Davies, D. (2004). Daytrading With On-Balance Volume. Stocks &
+Commodities, 22(1):20–25.
+
+106
+
+Bibliografia
+
+[Eyal and Sirer, 2014] Eyal, I. and Sirer, E. (2014).
+
+Majority Is Not Enough:
+
+Bitcoin Mining Is Vulnerable. In Christin, N. and Safavi-Naini, R., editors,
+Financial Cryptography and Data Security, Lecture Notes in Computer Science,
+pages 436–454. Springer Berlin Heidelberg.
+[Faber, 1994] Faber, B. (1994).
+
+The Relative Strength Index.
+
+Stocks &
+
+Commodities, 12(9):381–384.
+[Fama, 1970] Fama, E. F. (1970). Efficient Capital Markets: A Review of Empirical
+Work. Journal of Finance, 25(2):383–417.
+[Gustafson, 2001] Gustafson, G. (2001). Which Volatility Measure? Stocks &
+Commodities, 19(7):46–50.
+[Hammerbacher and Yager, 1981] Hammerbacher, I. M. and Yager, R. R. (1981).
+The personalization of security selection: An application of fuzzy set theory.
+Fuzzy Sets and Systems, 5(1):1–9.
+[Hsu, 2011] Hsu, C.-M. (2011). A hybrid procedure with feature selection for
+resolving stock/futures price forecasting problems.
+
+Neural Computing and
+
+Applications, 22(3-4):651–671.
+[Hsu et al., 2010] Hsu, C.-w., Chang, C.-c., and Lin, C.-j. (2010). A Practical Guide
+to Support Vector Classification. (1):1–16.
+[Huang, 2012] Huang, C.-F. (2012).
+
+A hybrid stock selection model using
+
+genetic algorithms and support vector regression.
+
+Applied Soft Computing,
+
+12(2):807–818.
+[Kara et al., 2011] Kara, Y., Acar Boyacioglu, M., and Baykan, Ö. K. (2011).
+Predicting direction of stock price index movement using artificial neural
+
+107
+
+Bibliografia
+
+networks and support vector machines: The sample of the Istanbul Stock
+Exchange. Expert Systems with Applications, 38(5):5311–5319.
+[Kelly Jr., 1956] Kelly Jr., J. L. (1956). A New Interpretation of Information Rate.
+Bell Syst. Tech. J., 35:917–926.
+[Koshy et al., 2014] Koshy, P., Koshy, D., and McDaniel, P. (2014). An Analysis
+of Anonymity in Bitcoin Using P2P Network Traffic.
+
+In Christin, N. and
+
+Safavi-Naini, R., editors, Financial Cryptography and Data Security, Lecture
+Notes in Computer Science, pages 469–485. Springer Berlin Heidelberg.
+[Ładyżyński et al., 2013] Ładyżyński, P., Żbikowski, K., and Grzegorzewski, P.
+(2013). Stock Trading with Random Forests, Trend Detection Tests and Force
+Index Volume Indicators. Artificial Intelligence and Soft Computing, Lecture
+Notes in Computer Science, 7895(2):441–452.
+[Lee, 2009] Lee, M.-C. (2009). Using support vector machine with a hybrid feature
+selection method to the stock trend prediction. Expert Systems with Applications,
+36(8):10896–10904.
+[MacKinlay, 2001] MacKinlay, A. W. L. A. C. (2001). A Non-Random Walk Down
+Wall Street. Princeton Books.
+[Magdon-Ismail et al., 2003] Magdon-Ismail, M., Atiya, A., Pratap, A., and
+Abu-Mostafa, Y. (2003).
+
+The maximum drawdown of the Brownian
+
+motion. 2003 IEEE International Conference on Computational Intelligence for
+Financial Engineering, 2003. Proceedings.
+[Markowitz and Xu, 1994] Markowitz, H. M. and Xu, G. L. (1994). Data mining
+corrections. The Journal of Portfolio Management, 21(1):60–69.
+
+108
+
+Bibliografia
+
+[McCorduck, 2004] McCorduck, P. (2004). Machines Who Think: A Personal
+Inquiry into the History and Prospects of Artificial Intelligence. AK Peters Ltd.
+[Mitchell, 1997] Mitchell, T. (1997). Machine Learning, volume 4.
+[Murphy, 1999] Murphy, J. J. (1999).
+
+Technical Analysis Of The Financial
+
+Markets. New York Institute of Finance.
+[Nakamoto, 2008] Nakamoto, S. (2008). Bitcoin: A peer-to-peer electronic cash
+system. Consulted, 1(2012):28.
+[Ng et al., 2014] Ng, W. W., Liang, X.-L., Li, J., Yeung, D. S., and Chan, P. P.
+(2014). LG-Trader: Stock trading decision support based on feature selection by
+weighted localized generalization error model. Neurocomputing, 146:104–112.
+[Ngai et al., 2011] Ngai, E., Hu, Y., Wong, Y., Chen, Y., and Sun, X. (2011).
+The application of data mining techniques in financial fraud detection: A
+classification framework and an academic review of literature. Decision Support
+Systems, 50(3):559–569.
+[Platt, 1999] Platt, J. C. (1999). Fast Training of Support Vector Machines Using
+Sequential Minimal Optimization. MIT Press.
+[Refenes et al., 1997] Refenes, A. N., Bentz, Y., Bunn, D. W., Burgess, A. N., and
+Zapranis, A. D. (1997). Financial time series modelling with discounted least
+squares backpropagation ’. Neurocomputing, 14(96):123–138.
+[Rosillo et al., 2013] Rosillo, R., Giner, J., and Fuente, D. (2013). The effectiveness
+of the combined use of VIX and Support Vector Machines on the prediction of
+S&P 500. Neural Computing and Applications.
+[Samuelson, 1965] Samuelson, P. (1965). Proof That Properly Anticipated Prices
+Fluctuate Randomly. Industrial Management Review, 6:41–49.
+109
+
+Bibliografia
+
+[Sewell, 2011] Sewell, M. (2011). Characterization of financial time series. RN.
+[Stiglitz, 1980] Stiglitz, S. J. G. J. E. (1980).
+
+On the Impossibility of
+
+Informationally Efficient Markets. American Economic Review, 70:393–408.
+[Tay and Cao, 2002] Tay, F. E. H. and Cao, L. J. (2002). Modified support vector
+machines in financial time series forecasting. Neurocomputing, 48:847–861.
+[Teixeira, 2010] Teixeira, L. A. (2010). A method for automatic stock trading
+combining technical analysis and nearest neighbor classification. Expert Systems
+with Applications, 37(10):6885–6890.
+[Theodoridis and Koutroumbas, 2008] Theodoridis, S. and Koutroumbas, K.
+(2008). Pattern Recognition. Academic Press.
+[Welch, 1947] Welch, B. L. (1947). The generalization of student’s problem when
+several different population variances are involved. Biometrika, 34:28–35.
+[Wen et al., 2010] Wen, Q., Yang, Z., Song, Y., and Jia, P. (2010). Automatic
+stock decision support system based on box theory and SVM algorithm. Expert
+Systems with Applications, 37(2):1015–1022.
+[White, 2000] White, H. (2000). A reality check for data snooping. Econometrica,
+68(5):1097–1126.
+[Wong, 1991] Wong, F. S. (1991). Time series forecasting using backpropagation
+neural networks. Neurocomputing, 2(4):147–159.
+[Zbikowski, 2014] Zbikowski, K. (2014). Time Series forecasting with Volume
+Weighted Support Vector Machines.
+Information Science, 424:250–258.
+
+110
+
+Communications in Computer and
+
+Bibliografia
+
+[Zbikowski, 2015] Zbikowski, K. (2015).
+
+Using Volume Weighted Support
+
+Vector Machines with walk forward testing and feature selection for the
+purpose of creating stock trading strategy. Expert Systems with Applications,
+42(4):1797–1805.
+[Zhang et al., 2014] Zhang, X., Hu, Y., Xie, K., Wang, S., Ngai, E., and Liu, M.
+(2014). A causal feature selection algorithm for stock prediction modeling.
+Neurocomputing, 142:48–59.
+
+111
+
+Spis rysunków
+1.1
+
+Szeregi czasowe pierwszych różnic dla indeksu WIG20 oraz dla
+procesu bładzenia
+˛
+losowego. . . . . . . . . . . . . . . . . . . . . . 19
+
+1.2
+
+Przykładowa trajektoria dziennych notowań cen akcji (u góry) oraz
+towarzyszacy
+˛ im wolumen transakcyjny (u dołu). Zauważalne jest
+zwi˛ekszenie wolumenu towarzyszace
+˛ wi˛ekszym ruchom cenowym. . 23
+
+2.1
+
+Klasyfikacja binarna - wyznaczanie granicy decyzyjnej, różne
+warianty złożoności modelu klasyfikacyjnego. Lewy rysunek model posiadajacy
+˛ wysoki bias, prawy - model charakteryzujacy
+˛
+si˛e wysoka˛ wariancja,˛ środkowy - granica decyzyjna b˛edaca
+˛
+kompromisem pomi˛edzy modelami ze zbyt wysokim oraz zbyt
+niskim dopasowaniem. . . . . . . . . . . . . . . . . . . . . . . . . 33
+
+2.2
+
+Klasyfikacja metoda˛ SVM . . . . . . . . . . . . . . . . . . . . . . 36
+
+3.1
+
+Przykład graficznej reprezentacji wskaźnika ATR (o n = 100 dni)
+oraz wskaźnika RSI (o n = 30 dni) wykreślonym w narz˛edziu
+analizy technicznej. . . . . . . . . . . . . . . . . . . . . . . . . . . 45
+
+3.2
+
+Przykład graficznej reprezentacji wskaźnika OBV wykreślonym w
+narz˛edziu analizy technicznej. . . . . . . . . . . . . . . . . . . . . 48
+
+3.3
+
+Przykład graficznej reprezentacji wskaźnika %R wykreślonym w
+narz˛edziu analizy technicznej. . . . . . . . . . . . . . . . . . . . . 50
+112
+
+Spis rysunków
+
+4.1
+
+Architektura systemu wykorzystywanego do testowania strategii
+inwestycyjnych . . . . . . . . . . . . . . . . . . . . . . . . . . . . 59
+
+4.2
+
+Algorytm strategii inwestycyjnej bazujacy
+˛
+na klasyfikatorze
+VW-SVM . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 65
+
+5.1
+
+Histogram stóp zwrotu przykładowego systemu transakcyjnego. . . 73
+
+5.2
+
+Optymalizacja i testowanie zgodne z walk forward analysis. . . . . 74
+
+5.3
+
+Wyniki
+
+ekstensywnej
+
+optymalizacji
+
+strategii
+
+inwestycyjnej
+
+(Optimized OXY) porównane z szeregiem bazowym (Benchmark
+- OXY) oraz ze strategia˛ wykorzystujac
+˛ a˛ las losowy Breimana
+(RandomForest - OXY)(z [Ładyżyński et al., 2013]) . . . . . . . . . 76
+5.4
+
+Przykładowe wyniki dla Konfiguracji 4. Kolorem czarnym
+oznaczono szereg czasowy notowań danej spółki, szarym lini˛e
+kapitału danej spółki. Przyj˛eto, że w chwili zero oba portfele
+rozpoczynały z kwota˛ 100000 jednostek kapitału. . . . . . . . . . . 83
+
+5.5
+
+Przykładowe wyniki dla Konfiguracji 8. Kolorem czarnym
+oznaczono szereg czasowy notowań danej spółki, szarym lini˛e
+kapitału danej spółki. Przyj˛eto, że w chwili zero oba portfele
+rozpoczynały z kwota˛ 100000 jednostek kapitału. . . . . . . . . . . 87
+
+5.6
+
+Przykładowe wyniki dla Konfiguracji 9. Kolorem czarnym
+oznaczono szereg czasowy notowań danej spółki, szarym lini˛e
+kapitału danej spółki. Przyj˛eto, że w chwili zero oba portfele
+rozpoczynały z kwota˛ 100000 jednostek kapitału. . . . . . . . . . . 90
+
+5.7
+
+Architektura przykładowego systemu tradingowego opartego na
+przewidywaniu okna oscylacji ceny instrumentu z wykorzystaniem
+klasyfikatora SVM [Wen et al., 2010] . . . . . . . . . . . . . . . . 95
+
+5.8
+
+Wyniki modelu EMA. Czarnym kolorem oznaczono lini˛e kapitału
+strategii „buy&hold”, szarym oznaczono lini˛e kapitału strategii EMA. 99
+113
+
+Spis rysunków
+
+5.9
+
+Wyniki modelu Box SVM. Czarnym kolorem oznaczono lini˛e
+kapitału strategii „buy&hold”, szarym oznaczono lini˛e kapitału
+strategii Box SVM. . . . . . . . . . . . . . . . . . . . . . . . . . . 99
+
+5.10 Wyniki modelu VW-SVM. Czarnym kolorem oznaczono lini˛e
+kapitału strategii „buy&hold”, szarym oznaczono lini˛e kapitału
+strategii VW-SVM. . . . . . . . . . . . . . . . . . . . . . . . . . . 100
+
+114
+
+Spis tablic
+5.1
+
+Przykładowe tablice pomyłek (ang. confusion matrix) dla
+klasyfikatorów SVM oraz VW-SVM prognozujacych
+˛
+5-dniowe
+trendy dla firmy AIG. % oznacza trend rosnacy,
+˛ & oznacza trend
+spadkowy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 68
+
+5.2
+
+Wyniki
+
+modeli
+
+SVM
+
+oraz
+
+VW-SVM
+
+dla
+
+predykcji
+
+krótkoterminowego trendu rosnacego.
+˛
+. . . . . . . . . . . . . . . . 70
+5.3
+
+Konfiguracje testowe. EW oraz FS oznaczaja˛ odpowiednio
+klasyfikator SVM z proponowana˛ funkcja˛ kary wykorzystujac
+˛ a˛
+ważenie wolumenem oraz selekcj˛e atrybutów za pomoca˛ indeksu
+Fisher’a. O obecności EW oraz FS w danej konfiguracji świadczy
+„+” lub „-” w przeciwnym przypadku. . . . . . . . . . . . . . . . . 78
+
+5.4
+
+Wyniki testów dla Konfiguracji 1-4 z Tabeli 5.3 . . . . . . . . . . . 81
+
+5.5
+
+Wyniki strategii „buy&hold” dla zakresu okna optymalizacji 100
+dni odpowiadajacej
+˛ Konfiguracjom 1-4 . . . . . . . . . . . . . . . . 82
+
+5.6
+
+Wyniki testów dla Konfiguracji 5-8 z Tabeli 5.3 . . . . . . . . . . . 85
+
+5.7
+
+Wyniki strategii „buy&hold” dla zakresu okna optymalizacji 500
+dni odpowiadajacej
+˛ Konfiguracjom 5-9 . . . . . . . . . . . . . . . . 86
+
+5.8
+
+Wyniki testów dla Konfiguracji 9. z Tabeli 5.3 . . . . . . . . . . . . 89
+
+115
+
+Spis tablic
+
+5.9
+
+Wskaźniki użyte jako wejścia dla modelu Box SVM oraz VW-SVM
+(n oznacza długość danych użytych w celu obliczeń; t jest indeksem
+oznaczajacym
+˛
+konkretny moment w szeregu czasowym wartości
+wskaźników) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 96
+
+5.10 Wyniki przeprowadzonych testów dla modeli EMA, Box SVM oraz
+VW-SVM. R jest stopa˛ zwrotu za cały okres testowy, DD oznacza
+maksymalna˛ strat˛e na zadanym okresie, która została poniesiona
+przez dany model. . . . . . . . . . . . . . . . . . . . . . . . . . . . 97
+
+116
+
+Dodatek A
+Kod strategii inwestycyjnej w j˛ezyku
+Java
+1
+
+p u b l i c c l a s s SVMModifiedTrading e x t e n d s A l g o r i t h m M o d e l {
+
+2
+3
+4
+
+private static
+
+f i n a l S t r i n g INTERNAL_TWL = "INTERNAL_TWL" ;
+
+5
+
+private static
+
+f i n a l S t r i n g INTERNAL_OWL = "INTERNAL_OWL" ;
+
+6
+
+private static
+
+f i n a l S t r i n g EXAMPLE_WEIGHTS = "EXAMPLE_WEIGHTS" ;
+
+7
+
+private static
+
+f i n a l S t r i n g FEATURE_SELECTION = "FEATURE_SELECTION" ;
+
+8
+
+private static
+
+f i n a l S t r i n g N = "N" ;
+
+9
+
+private static
+
+f i n a l S t r i n g M = "M" ;
+
+10
+
+private static
+
+f i n a l S t r i n g STOP_LOSS = " s t o p L o s s " ;
+
+11
+
+private static
+
+12
+
+public s t a t i c
+
+f i n a l i n t PREDICTED_Y = 0 ;
+
+f i n a l S t r i n g NMB_OF_DELAYS = "NMB_OF_DELAYS" ;
+
+13
+
+public s t a t i c
+
+f i n a l i n t REAL_Y = 1 ;
+
+14
+15
+
+/ ∗ ∗ A l i s t which s t o r e s q u o t a t i o n s . ∗ /
+
+16
+
+LinkedList <ContractQuotation > quotationsStore ;
+
+17
+
+i n t tickCount =0;
+
+18
+19
+
+Queue < I n t e g e r > p o s i t i o n s S h o r t ;
+
+20
+
+Queue < I n t e g e r > p o s i t i o n s L o n g ;
+
+21
+22
+23
+
+private static
+
+f i n a l Logger log = L o g g e r F a c t o r y . getLogger (
+
+SVMModifiedTrading . c l a s s ) ;
+
+117
+
+Dodatek A. Kod strategii inwestycyjnej w j˛ezyku Java
+
+24
+25
+
+/∗∗
+
+26
+
+∗ Parameters of algorithm .
+
+27
+
+∗/
+
+28
+
+p r i v a t e double stopLoss ;
+
+29
+30
+
+p r i v a t e boolean i s I n i t i a l i z e d = f a l s e ;
+
+31
+32
+
+p r i v a t e i n t internalOWL ;
+
+33
+
+p r i v a t e i n t internalTWL ;
+
+34
+35
+
+/ / t h e number o r e q u i r e d a g g r e g a t e s t o compute f e a t u r e
+
+36
+
+private int n;
+
+37
+
+/ / t h e number o r e q u i r e d a g g r e g a t e s t o compute t a r g e t v a l u e
+
+38
+
+p r i v a t e i n t m;
+
+39
+40
+41
+42
+43
+44
+45
+
+p r i v a t e LinkedList <ContractQuotation > q u o t a t i o n s F o r I n d i c a t o r s
+= new L i n k e d L i s t < C o n t r a c t Q u o t a t i o n > ( ) ;
+p r i v a t e LinkedList <ContractQuotation > quotationsForObjectiveComputation
+= new L i n k e d L i s t < C o n t r a c t Q u o t a t i o n > ( ) ;
+p r i v a t e LinkedList <ContractQuotation > quotationsForCurrentInputComputation
+= new L i n k e d L i s t < C o n t r a c t Q u o t a t i o n > ( ) ;
+
+46
+47
+
+p r i v a t e WalkForwardSvmProblem svmProblem ;
+
+48
+
+private IndicatorsParameters indicatorsParameters ;
+
+49
+
+p r i v a t e i n t nmbOfIndicators ;
+
+50
+
+p r i v a t e i n t nmbOfDelays ;
+
+51
+
+private int ticksFromInternalOptimization ;
+
+52
+
+p r i v a t e boolean i s I n t e r n a l O p t i m i z e d ;
+
+53
+
+p r i v a t e svm_node [ ] c u r r e n t I n p u t ;
+
+54
+
+p r i v a t e svm_parameter svmProblemParameter ;
+
+55
+56
+
+p r i v a t e svm_model svmModel ;
+
+57
+
+L i n k e d L i s t < Double > p r e d i c t i o n H i s t o r y = new L i n k e d L i s t < Double > ( ) ;
+
+58
+
+p r i v a t e double svmPrediction ;
+
+59
+60
+
+L i s t < Double [ ] > t e s t P e r f o r m a n c e V a l u e s ;
+
+61
+62
+
+private PrintWriter writer ;
+
+63
+64
+65
+
+public void i n i t i a l i z e M o d e l ( TestScenario currentScenario ,
+A s s e t s P o r t f o l i o S e r v i c e aps ,
+
+118
+
+Dodatek A. Kod strategii inwestycyjnej w j˛ezyku Java
+
+VirtualBroker virtualBroker )
+
+66
+67
+
+{
+
+68
+
+s u p e r . i n i t i a l i z e M o d e l ( c u r r e n t S c e n a r i o , aps , v i r t u a l B r o k e r ) ;
+
+69
+
+try {
+initializeSVMModifiedTrading () ;
+
+70
+
+} catch ( CannotFindParameterException e ) {
+
+71
+
+l o g . e r r o r ( " B l a d ! Nie podano p o a r a m e t r o w w s c e n a r i u s z u ! " , e ) ;
+
+72
+
+}
+
+73
+74
+
+}
+
+75
+76
+
+public void initializeSVMModifiedTrading ( )
+throws CannotFindParameterException {
+
+77
+78
+
+try {
+w r i t e r = new P r i n t W r i t e r ( new F i l e O u t p u t S t r e a m (
+
+79
+
+new F i l e ( " s t a t i s t i c s . c s v " ) , t r u e ) ) ;
+
+80
+81
+
+} catch ( FileNotFoundException e ) {
+e . printStackTrace () ;
+
+82
+83
+
+}
+
+84
+85
+
+q u o t a t i o n s S t o r e = new L i n k e d L i s t < C o n t r a c t Q u o t a t i o n > ( ) ;
+
+86
+87
+
+tickCount =0;
+
+88
+
+p o s i t i o n s L o n g = new L i n k e d L i s t < I n t e g e r > ( ) ;
+
+89
+
+p o s i t i o n s S h o r t = new L i n k e d L i s t < I n t e g e r > ( ) ;
+
+90
+91
+
+t h i s . s t o p L o s s = t h i s . g e t D o u b l e P a r a m e t e r B y N a m e ( STOP_LOSS ) ;
+
+92
+93
+
+t h i s . i n t e r n a l T W L = t h i s . g e t I n t P a r a m e t e r B y N a m e (INTERNAL_TWL) ;
+
+94
+
+t h i s . i n t e r n a l O W L = t h i s . g e t I n t P a r a m e t e r B y N a m e (INTERNAL_OWL) ;
+
+95
+96
+
+t h i s . n = t h i s . g e t I n t P a r a m e t e r B y N a m e (N) ;
+
+97
+
+t h i s .m = t h i s . g e t I n t P a r a m e t e r B y N a m e (M) ;
+
+98
+
+t h i s . nmbOfDelays = t h i s . g e t I n t P a r a m e t e r B y N a m e (NMB_OF_DELAYS) ;
+
+99
+100
+
+t h i s . i n d i c a t o r s P a r a m e t e r s = new I n d i c a t o r s P a r a m e t e r s ( t h i s ) ;
+
+101
+102
+
+t h i s . nmbOfIndicators = i n d i c a t o r s P a r a m e t e r s . getNmbOfIndicators ( ) ;
+
+103
+104
+
+t h i s . s t o p L o s s = t h i s . g e t D o u b l e P a r a m e t e r B y N a m e ( STOP_LOSS ) ;
+
+105
+106
+
+t h i s . ticksFromInternalOptimization= 0;
+
+107
+
+tickCount= 0;
+
+119
+
+Dodatek A. Kod strategii inwestycyjnej w j˛ezyku Java
+
+isInternalOptimized=false ;
+
+108
+109
+
+svmProblem = new WalkForwardSvmProblem ( nmbOfDelays ,
+
+110
+111
+
+n m b O f I n d i c a t o r s , internalOWL ,
+
+112
+
+i n t e r n a l T W L , internalOWL , i n d i c a t o r s P a r a m e t e r s ,
+
+113
+
+t h i s . g e t I n t P a r a m e t e r B y N a m e ( FEATURE_SELECTION ) == 1 ) ;
+
+114
+
+c u r r e n t I n p u t = new svm_node [ svmProblem . g e t N m b O f F e a t u r e s ( ) ] ;
+
+115
+116
+
+t e s t P e r f o r m a n c e V a l u e s = new A r r a y L i s t < Double [ ] > ( ) ;
+
+117
+118
+
+f o r ( i n t i = 0 ; i < svmProblem . g e t N m b O f F e a t u r e s ( ) ; i ++) {
+
+119
+
+c u r r e n t I n p u t [ i ] = new svm_node ( ) ;
+
+120
+
+}
+
+121
+122
+
+s v m P r o b l e m P a r a m e t e r = new s v m _ p a r a m e t e r ( ) ;
+
+123
+124
+125
+
+s v m P r o b l e m P a r a m e t e r . s v m _ t y p e = s v m _ p a r a m e t e r . C_SVC ;
+
+126
+
+/ / s v m P r o b l e m P a r a m e t e r . s v m _ t y p e = s v m _ p a r a m e t e r . NU_SVR ;
+
+127
+
+/ / s v m P r o b l e m P a r a m e t e r . k e r n e l _ t y p e = s v m _ p a r a m e t e r . RBF ;
+
+128
+
+svmProblemParameter .C = 100;
+
+129
+
+svmProblemParameter . eps = 0 . 0 0 1 ;
+
+130
+
+svmProblemParameter . examples_weights
+= t h i s . g e t I n t P a r a m e t e r B y N a m e (EXAMPLE_WEIGHTS) ;
+
+131
+132
+
+i s I ni t i a l i ze d =true ;
+
+133
+134
+
+}
+
+135
+136
+
+/∗∗
+
+137
+
+∗
+
+T h i s f u n c t i o n i s t h e h e a r t o f t h e model and s h o u l d be
+
+138
+
+∗
+
+i m p l e m e n t e d by t h e u s e r .
+
+139
+
+∗/
+
+140
+
+public void runTrade ( List < ContractQuotation > t r a n s p o r t L i s t ) {
+
+141
+
+/ / Add i n c o m i n g q u o t a t i o n s t o t h e l i s t
+
+142
+
+quotationsStore . addFirst ( t r a n s p o r t L i s t . get (0) ) ;
+
+143
+144
+145
+
+if (! isInitialized ) {
+try {
+initializeSVMModifiedTrading () ;
+
+146
+147
+
+} catch ( CannotFindParameterException e ) {
+l o g . e r r o r ( " B l a d ! Nie podano p o a r a m e t r o w w s c e n a r i u s z u ! " , e ) ;
+
+148
+149
+
+}
+
+120
+
+Dodatek A. Kod strategii inwestycyjnej w j˛ezyku Java
+
+}
+
+150
+151
+152
+
+t i c k C o u n t ++;
+
+153
+
+storeTick ( t r a n s p o r t L i s t . get (0) ) ;
+
+154
+
+if (! isTradingPossible () ){
+
+155
+
+return ;
+
+156
+
+}
+
+157
+158
+
+i f ( t i c k s F r o m I n t e r n a l O p t i m i z a t i o n >= i n t e r n a l T W L ) {
+
+159
+160
+
+internalOptimization () ;
+
+161
+
+ticksFromInternalOptimization = 0;
+
+162
+
+isInternalOptimized=true ;
+}
+
+163
+164
+
+l o g . i n f o ( " c u r r e n t t i c k s F r o m I n t e r n a l O p t i m i z a t i o n : {} " ,
+
+165
+
+ticksFromInternalOptimization ) ;
+
+166
+167
+
+if (! isInternalOptimized ) {
+
+168
+
+return ;
+
+169
+
+}
+
+170
+171
+172
+
+svmPrediction = svmPrediction () ;
+
+173
+
+svmTestPerformance ( svmPrediction ) ;
+
+174
+
+TradingSignalEnum s i g n a l = s i g n a l G e n e r a t o r (
+
+175
+176
+
+quotationsStore . get (1) . getClose (
+
+177
+
+quotationsStore . get (0) . getClose () ,
+
+178
+
+svmPrediction ) ;
+
+179
+180
+
+/ / check i f p o s i t i o n i s
+
+181
+
+refreshPositions () ;
+
+s t i l l open
+
+182
+183
+
+positionManagementOnlyLong ( t r a n s p o r t L i s t , s i g n a l ) ;
+
+184
+
+/ / positionManagementLongAndShort ( t r a n s p o r t L i s t , s i g n a l ) ;
+
+185
+
+}
+
+186
+187
+
+p r i v a t e void svmTestPerformance ( double svmPrediction ) {
+
+188
+
+Double [ ] p r e d i c t i o n A n d A c t u a l V a l u e s = new Double [ 2 ] ;
+
+189
+
+p r e d i c t i o n A n d A c t u a l V a l u e s [ PREDICTED_Y ] = . 0 ;
+
+190
+
+p r e d i c t i o n A n d A c t u a l V a l u e s [ REAL_Y ] = . 0 ;
+
+191
+
+121
+
+Dodatek A. Kod strategii inwestycyjnej w j˛ezyku Java
+
+192
+
+p r e d i c t i o n A n d A c t u a l V a l u e s [ PREDICTED_Y ] = s v m P r e d i c t i o n ;
+
+193
+
+t e s t P e r f o r m a n c e V a l u e s . add ( p r e d i c t i o n A n d A c t u a l V a l u e s ) ;
+
+194
+195
+
+i f ( t e s t P e r f o r m a n c e V a l u e s . s i z e ( ) > m) {
+d o u b l e s v m R e a l V a l u e = svmProblem . c o m p u t e T a r g e t V a l u e (
+
+196
+
+quotationsForObjectiveComputation ) ;
+
+197
+
+t e s t P e r f o r m a n c e V a l u e s . g e t ( t e s t P e r f o r m a n c e V a l u e s . s i z e ( )−m−1) [ 1 ]
+
+198
+
+= svmRealValue ;
+
+199
+200
+
+}
+
+201
+202
+
+i n t t o t a l =0;
+
+203
+
+i n t good = 0 ;
+
+204
+
+i n t lastGood =0;
+
+205
+
+i n t twlPeriodsCounter = 0;
+
+206
+207
+
+i n t tp = 0;
+
+208
+
+i n t fp = 0;
+
+209
+
+i n t tn = 0;
+
+210
+
+i n t fn = 0;
+
+211
+
+d o u b l e accTwlSum = 0 ;
+
+212
+
+f o r ( i n t i = 0 ; i < t e s t P e r f o r m a n c e V a l u e s . s i z e ( )−m; i ++) {
+
+213
+
+i f ( t e s t P e r f o r m a n c e V a l u e s . g e t ( i ) [ REAL_Y] = = 1 ) {
+i f ( t e s t P e r f o r m a n c e V a l u e s . g e t ( i ) [ PREDICTED_Y ] . e q u a l s (
+
+214
+
+t e s t P e r f o r m a n c e V a l u e s . g e t ( i ) [ REAL_Y ] ) ) {
+
+215
+
+t p ++;
+
+216
+
+} else {
+
+217
+
+f n ++;
+
+218
+
+}
+
+219
+220
+
+} else {
+i f ( t e s t P e r f o r m a n c e V a l u e s . g e t ( i ) [ PREDICTED_Y ] . e q u a l s (
+
+221
+
+t e s t P e r f o r m a n c e V a l u e s . g e t ( i ) [ REAL_Y ] ) ) {
+
+222
+
+t n ++;
+
+223
+
+} else {
+
+224
+
+f p ++;
+
+225
+
+}
+
+226
+227
+
+}
+
+228
+229
+
+i f ( t e s t P e r f o r m a n c e V a l u e s . g e t ( i ) [ PREDICTED_Y ] . e q u a l s (
+t e s t P e r f o r m a n c e V a l u e s . g e t ( i ) [ REAL_Y ] ) ) {
+
+230
+
+good ++;
+
+231
+232
+
+}
+
+233
+
+t o t a l ++;
+
+122
+
+Dodatek A. Kod strategii inwestycyjnej w j˛ezyku Java
+
+i f ( i >0 && i%i n t e r n a l T W L == i n t e r n a l T W L −1){
+
+234
+235
+
+i n t g o o d D i f f = good − l a s t G o o d ;
+
+236
+
+d o u b l e accTwl = ( d o u b l e ) g o o d D i f f / ( d o u b l e ) ( i n t e r n a l T W L ) ;
+
+237
+
+accTwlSum += accTwl ;
+
+238
+
+t w l P e r i o d s C o u n t e r ++;
+
+239
+
+l a s t G o o d = good ;
+}
+
+240
+
+}
+
+241
+242
+
+}
+
+243
+244
+
+p r i v a t e double svmPrediction ( ) {
+d o u b l e p r e d i c t e d V a l u e = svmProblem . s v m P r e d i c t i o n ( c u r r e n t I n p u t ,
+
+245
+
+svmModel ) ;
+
+246
+247
+
+p r e d i c t i o n H i s t o r y . add ( p r e d i c t e d V a l u e ) ;
+
+248
+
+return predictedValue ;
+
+249
+250
+
+}
+
+251
+252
+
+p r i v a t e void i n t e r n a l O p t i m i z a t i o n ( ) {
+l o g . i n f o ( " >>> i n t e r n a l O p t i m i z a t i o n s t a r t i n t i c k : {} " , t i c k C o u n t ) ;
+
+253
+254
+255
+
+/ / p r i n t P r o b l e m ( lowProblem ) ;
+
+256
+
+svmModel = svmProblem . t r a i n W i t h N o r m a l i z a t i o n ( s v m P r o b l e m P a r a m e t e r ) ;
+
+257
+
+l o g . i n f o ( " <<< i n t e r n a l O p t i m i z a t i o n end " ) ;
+
+258
+259
+
+}
+
+260
+261
+
+p r i v a t e void s t o r e T i c k ( C o n t r a c t Q u o t a t i o n currAgg ) {
+storeDataForSvmComputation ( currAgg ) ;
+
+262
+263
+
+}
+
+264
+265
+
+p r i v a t e v o i d s t o r e D a t a F o r S v m C o m p u t a t i o n ( C o n t r a c t Q u o t a t i o n agg ) {
+
+266
+
+q u o t a t i o n s F o r O b j e c t i v e C o m p u t a t i o n . add ( agg ) ;
+
+267
+
+q u o t a t i o n s F o r C u r r e n t I n p u t C o m p u t a t i o n . add ( agg ) ;
+
+268
+
+i f ( q u o t a t i o n s F o r O b j e c t i v e C o m p u t a t i o n . s i z e ( ) > m) {
+q u o t a t i o n s F o r I n d i c a t o r s . add (
+
+269
+
+q u o t a t i o n s F o r O b j e c t i v e C o m p u t a t i o n . pop ( ) ) ;
+
+270
+271
+
+}
+
+272
+273
+
+if ( quotationsForCurrentInputComputation . size () > n){
+
+274
+
+q u o t a t i o n s F o r C u r r e n t I n p u t C o m p u t a t i o n . remove ( ) ;
+
+275
+
+c u r r e n t I n p u t = svmProblem . a d d R o w F o r P r e d i c t i o n (
+
+123
+
+Dodatek A. Kod strategii inwestycyjnej w j˛ezyku Java
+
+quotationsForCurrentInputComputation ,
+
+276
+
+currentInput ) ;
+
+277
+
+}
+
+278
+279
+
+i f ( q u o t a t i o n s F o r I n d i c a t o r s . s i z e ( ) >= n ) {
+
+280
+
+if ( quotationsForIndicators . size () > n){
+
+281
+
+q u o t a t i o n s F o r I n d i c a t o r s . remove ( ) ;
+
+282
+
+}
+
+283
+
+svmProblem . computeSvmNodeRowForTraining ( q u o t a t i o n s F o r I n d i c a t o r s ) ;
+
+284
+
+}
+
+285
+286
+
+i f ( t i c k C o u n t >= n + m + nmbOfDelays − 1 )
+
+287
+
+addInputRow ( ) ;
+
+288
+289
+
+l o g . t r a c e ( " q u o t a t i o n s F o r O b j e c t i v e C o m p u t a t i o n : { } , s i z e : {} " ,
+
+290
+291
+
+quotationsForObjectiveComputation ,
+
+292
+
+quotationsForObjectiveComputation . size () ) ;
+
+293
+
+l o g . t r a c e ( " q u o t a t i o n s F o r I n d i c a t o r s : { } , s i z e : {} " ,
+
+294
+
+quotationsForIndicators ,
+
+295
+
+quotationsForIndicators . size () ) ;
+
+296
+
+/ / Ci = agg . g e t C l o s e ( ) ;
+
+297
+298
+
+}
+
+299
+300
+
+p r i v a t e v o i d addInputRow ( ) {
+
+301
+
+l o g . debug ( " >> addInputRow " ) ;
+
+302
+
+svmProblem . addRow ( q u o t a t i o n s F o r O b j e c t i v e C o m p u t a t i o n ,
+
+303
+
+quotationsForIndicators ,
+
+304
+
+t i c k s F r o m I n t e r n a l O p t i m i z a t i o n%i n t e r n a l T W L ) ;
+
+305
+306
+
+t i c k s F r o m I n t e r n a l O p t i m i z a t i o n ++;
+
+307
+
+l o g . debug ( " << addInputRow " ) ;
+
+308
+
+}
+
+309
+310
+
+p r i v a t e boolean i s T r a d i n g P o s s i b l e ( ) {
+r e t u r n t i c k C o u n t >=n+m+nmbOfDelays −1+internalOWL −1;
+
+311
+312
+
+}
+
+313
+314
+
+p r i v a t e void positionManagementOnlyLong (
+
+315
+
+List <ContractQuotation > transportList ,
+
+316
+
+TradingSignalEnum s i g n a l ) {
+
+317
+
+i n t p o s i t i o n I d ; / / open l o n g when no p o s i t i o o n
+
+124
+
+Dodatek A. Kod strategii inwestycyjnej w j˛ezyku Java
+
+i f ( s i g n a l == T r a d i n g S i g n a l E n u m . LONG && p o s i t i o n s L o n g . i s E m p t y ( ) ) {
+
+318
+319
+
+double vol= P o s i t i o n S i z e r ( ) ;
+
+320
+
+p o s i t i o n I d = v i r t u a l B r o k e r . sendOrder ( true ,
+
+321
+
+0,
+
+322
+
+stopLoss∗ t r a n s p o r t L i s t . get (0) . getClose () ,
+
+323
+
+false ,
+
+324
+
+vol ,
+
+325
+
+10.0 ,
+
+326
+
+0,
+
+327
+
+t r a n s p o r t L i s t . get (0) . getContract () ) ;
+
+328
+
+i f ( p o s i t i o n I d ! = −1) {
+
+329
+
+p o s i t i o n s L o n g . add ( p o s i t i o n I d ) ;
+
+330
+
+}
+
+331
+332
+
+}
+
+333
+
+i f ( s i g n a l == T r a d i n g S i g n a l E n u m . SHORT && ! p o s i t i o n s L o n g . i s E m p t y ( ) ) {
+closeAllPositions () ;
+
+334
+
+}
+
+335
+336
+
+}
+
+337
+338
+
+p u b l i c TradingSignalEnum s i g n a l G e n e r a t o r ( double previousClose ,
+
+339
+
+double currentClose ,
+
+340
+
+double svmPrediction ) {
+i f ( s v m P r e d i c t i o n == 1 . 0 ) {
+
+341
+
+r e t u r n T r a d i n g S i g n a l E n u m . LONG;
+
+342
+
+} else {
+
+343
+
+r e t u r n T r a d i n g S i g n a l E n u m . SHORT ;
+
+344
+
+}
+
+345
+346
+
+}
+
+347
+348
+
+/∗∗
+
+349
+
+∗ P o s i t i o n s i z e r c a l c u l a t e s volume f o r open p o s i t i o n .
+
+350
+
+∗ @ r e t u r n volume s i z e
+∗/
+
+351
+352
+
+public double P o s i t i o n S i z e r ( ) {
+
+353
+
+d o u b l e cm= q u o t a t i o n s S t o r e . g e t ( 0 ) . g e t C o n t r a c t ( ) . g e t C o n t r a c t M u l t i p l i e r ( ) ;
+
+354
+
+d o u b l e c o n t r a c t V a l u e =cm∗ q u o t a t i o n s S t o r e . g e t ( 0 ) . g e t C l o s e ( ) ;
+
+355
+
+d o u b l e v o l =1∗ a p s . getAp ( ) . g e t E q u i t y ( ) / c o n t r a c t V a l u e ;
+
+356
+
+r e t u r n ( i n t ) vol ;
+
+357
+358
+
+}
+
+359
+
+125
+
+Dodatek A. Kod strategii inwestycyjnej w j˛ezyku Java
+
+public void c l o s e A l l P o s i t i o n s ( ) {
+
+360
+
+while ( ! p o s i t i o n s L o n g . isEmpty ( ) ) {
+
+361
+
+i f ( v i r t u a l B r o k e r . isOpen ( p o s i t i o n s L o n g . peek ( ) ) )
+
+362
+
+v i r t u a l B r o k e r . c l o s e P o s i t i o n ( p o s i t i o n s L o n g . p e e k ( ) , "CLALL" ) ;
+
+363
+
+positionsLong . poll () ;
+
+364
+365
+
+}
+
+366
+
+while ( ! p o s i t i o n s S h o r t . isEmpty ( ) ) {
+i f ( v i r t u a l B r o k e r . isOpen ( p o s i t i o n s S h o r t . peek ( ) ) )
+
+367
+
+v i r t u a l B r o k e r . c l o s e P o s i t i o n ( p o s i t i o n s S h o r t . p e e k ( ) , "CSALL" ) ;
+
+368
+
+positionsShort . poll () ;
+
+369
+
+}
+
+370
+
+}
+
+371
+372
+
+/∗∗
+
+373
+
+∗ Checks w h e t h e r p o s i t i o n s weren ’ t c l o s e d a u t o m a t i c a l l y .
+
+374
+
+∗/
+
+375
+
+p r i v a t e void r e f r e s h P o s i t i o n s ( ) {
+
+376
+377
+
+I t e r a t o r <Integer > itLong = positionsLong . i t e r a t o r ( ) ;
+
+378
+
+Iterator <Integer > itShort = positionsShort . i t e r a t o r () ;
+
+379
+
+I n t e g e r tmpLong = 0 ;
+
+380
+
+I n t e g e r tmpShort = 0;
+
+381
+
+while ( itLong . hasNext ( ) ) {
+
+382
+
+tmpLong = i t L o n g . n e x t ( ) ;
+
+383
+
+i f ( ! v i r t u a l B r o k e r . i s O p e n ( tmpLong ) ) {
+i t L o n g . remove ( ) ;
+
+384
+
+}
+
+385
+386
+
+}
+
+387
+
+while ( i t S h o r t . hasNext ( ) ) {
+
+388
+
+tmpShort = i t S h o r t . next ( ) ;
+
+389
+
+i f ( ! v i r t u a l B r o k e r . isOpen ( tmpShort ) ) {
+i t S h o r t . remove ( ) ;
+
+390
+
+}
+
+391
+
+}
+
+392
+
+}
+
+393
+394
+
+}
+
+395
+396
+
+126
+
+Indeks
+bitcoin, 91
+
+ARMA, 42
+
+box theory, 94
+
+MA, 42
+Monte Carlo permutacji metoda, 75
+
+candlesticks, 44
+czułość klasyfikacji, 70
+
+out-of-sample testowanie, 74
+
+dokładność klasyfikacji, 69
+
+precyzja klasyfikacji, 69
+proces bładzenia
+˛
+losowego, 18
+
+F1 miara, 70
+funkcja jadrowa,
+˛
+37
+
+skalowanie, 57
+
+funkcja kary, 26, 32, 52, 59
+
+stacjonarność, 41
+strategia inwestycyjna, 14
+
+hipoteza rynku efektywnego, 17
+
+szereg czasowy, 40
+indeks Fishera, 55
+teoria Dow’a, 24, 41
+Markowitza i Xu czynnik data mining,
+74
+
+uczenie maszynowe, 29
+
+maszyna wektorów nośnych, 25, 27, 34, ważona wolumenem maszyna wektorów
+94
+
+nośnych, 60
+
+maximum drawdown, 79
+
+walk-forward analiza, 74
+
+model ekonometryczny
+
+Welcha test, 71
+
+AR, 42
+
+White’a wiarygodności test, 75
+
+ARCH, 42
+
+Wskaźniki analizy technicznej
+
+ARIMA, 42
+
+Average True Range, 44, 96
+127
+
+Indeks
+
+On–Balance Volume, 47, 96
+Oscylator Williams’a, 48, 96
+Relative Strength Index, 49, 96
+Vortex, 46, 96
+wykładnicza średnia ruchoma, 93
+wymiar Vapnik’a i Chervonenkis’a, 34
+
+128
+
+
