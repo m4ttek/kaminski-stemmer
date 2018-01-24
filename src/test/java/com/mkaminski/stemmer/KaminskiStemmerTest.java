@@ -1,5 +1,6 @@
 package com.mkaminski.stemmer;
 
+import static com.mkaminski.stemmer.TestUtil.calculateAndPrintStatistics;
 import static com.mkaminski.stemmer.TestUtil.getOutputFileForSaveStemmingResult;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,7 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -21,11 +24,13 @@ public class KaminskiStemmerTest {
     private static Path kaminskiStemmerTestPath;
 
     @BeforeAll
-    public static void setupDictionary() throws IOException {
+    public static void setupDictionary() throws IOException, URISyntaxException {
         kaminskiStemmerTestPath = Files.createTempDirectory("morfologik_stemmer_test");
+        testStemming();
     }
 
     @Test
+    @Disabled
     void testDictionaryConversion() throws URISyntaxException, IOException {
         // given
         Path kaminskiStemmerTestPath = Files.createTempDirectory("kaminski_stemmer_test");
@@ -45,8 +50,7 @@ public class KaminskiStemmerTest {
         assertTrue(Files.exists(dictionaryResultPath));
     }
 
-    @Test
-    void testStemming() throws URISyntaxException, IOException {
+    static void testStemming() throws URISyntaxException, IOException {
         // given
         Path stemmedText = getOutputFileForSaveStemmingResult(kaminskiStemmerTestPath, "stemmed");
 
@@ -54,8 +58,8 @@ public class KaminskiStemmerTest {
         KaminskiStemmerRunner kaminskiStemmerRunner = new KaminskiStemmerRunner(
                 new RunOptionsBuilder()
                         .setMainCommand("stem")
-                        .setDictPath(Paths.get(getClass().getClassLoader().getResource("pl_dict.ser").toURI()))
-                        .setSourcePath(Paths.get(getClass().getClassLoader().getResource("to_stem.txt").toURI()))
+                        .setDictPath(Paths.get(KaminskiStemmerTest.class.getClassLoader().getResource("pl_dict.ser").toURI()))
+                        .setSourcePath(Paths.get(KaminskiStemmerTest.class.getClassLoader().getResource("to_stem.txt").toURI()))
                         .setResultPath(stemmedText)
                         .createRunOptions());
 
@@ -66,26 +70,52 @@ public class KaminskiStemmerTest {
         assertEquals("Tomek pisać dokumentacja Alo mój pies ", Files.readAllLines(stemmedText).get(0));
     }
 
+
     @Test
-    void testStemmingStatistics() throws URISyntaxException, IOException {
+    public void stemOldPolishTest() throws IOException, URISyntaxException {
+        testStemmingStatistics("pan_tadeusz");
+    }
+
+    @Test
+    public void stemOldBigPolishTest() throws IOException, URISyntaxException {
+        testStemmingStatistics("ogniem-i-mieczem");
+    }
+
+    @Test
+    public void stemScienceBigPolishTest() throws IOException, URISyntaxException {
+        testStemmingStatistics("zbikowski-doktorat");
+    }
+
+    @Test
+    public void stemContemporaryPolishTest() throws IOException, URISyntaxException {
+        testStemmingStatistics("sztuka-zdobywania-pieniedzy");
+    }
+
+    @Test
+    public void stemLiteraturePolishTest() throws IOException, URISyntaxException {
+        testStemmingStatistics("tadeusz-micinski-nauczycielka");
+    }
+
+    void testStemmingStatistics(String resourceName) throws URISyntaxException, IOException {
         // given
-        Path kaminskiStemmerTestPath = Files.createTempDirectory("kaminski_stemmer_test");
-        Path stemmedText = Paths.get(kaminskiStemmerTestPath.toString(), "stemmed.txt");
+        Path unstemmedText = Paths.get(getClass().getClassLoader().getResource(resourceName + ".txt").toURI());
+        Path stemmedText = getOutputFileForSaveStemmingResult(kaminskiStemmerTestPath, resourceName);
 
         // when
         KaminskiStemmerRunner kaminskiStemmerRunner = new KaminskiStemmerRunner(
                 new RunOptionsBuilder()
                         .setMainCommand("stem")
-                        .setDictPath(Paths.get(getClass().getClassLoader().getResource("pl_dict.ser").toURI()))
-                        .setSourcePath(Paths.get(getClass().getClassLoader().getResource("pan_tadeusz.txt").toURI()))
+                        .setSourcePath(unstemmedText)
                         .setResultPath(stemmedText)
                         .createRunOptions());
 
-        System.currentTimeMillis();
+        long start = System.currentTimeMillis();
         kaminskiStemmerRunner.run();
-        System.currentTimeMillis();
+        long end = System.currentTimeMillis();
 
         // then
         assertTrue(Files.exists(stemmedText));
+
+        calculateAndPrintStatistics(end - start, kaminskiStemmerTestPath, resourceName);
     }
 }
