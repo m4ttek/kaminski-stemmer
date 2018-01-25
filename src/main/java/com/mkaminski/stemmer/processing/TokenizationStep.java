@@ -11,8 +11,10 @@ public class TokenizationStep implements ProcessStep {
     @Override
     public void makeProcess(ProcessingContext processingContext) {
         InputStream source = processingContext.getSource();
-        Scanner scanner = new Scanner(source).useDelimiter("[\\s]+");
-        processingContext.setFileScanner(scanner);
+        if (source != null) {
+            Scanner scanner = new Scanner(source).useDelimiter("[\\s]+");
+            processingContext.setFileScanner(scanner);
+        }
     }
 
     @Override

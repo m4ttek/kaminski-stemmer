@@ -36,6 +36,10 @@ public class KaminskiStemmerRunner {
     }
 
     public void run() {
+        processSteps();
+    }
+
+    void processSteps() {
         processStepList
                 .stream()
                 .filter(processStep -> processStep.inCommands().contains(runOptions.getMainCommand()))
@@ -43,12 +47,24 @@ public class KaminskiStemmerRunner {
                     try {
                         processStep.makeProcess(processingContext);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        throw new FailureException(e);
                     }
                 });
+
     }
 
     public static void main(String[] args) {
-        new KaminskiStemmerRunner(new OptionsGetter().parseCommands(args)).run();
+        try {
+            new KaminskiStemmerRunner(new OptionsGetter().parseCommands(args)).run();
+        } catch (FailureException ex) {
+            System.err.println(ex.getLocalizedMessage());
+        }
+    }
+
+    static class FailureException extends RuntimeException {
+
+        public FailureException(Exception ex) {
+            super(ex);
+        }
     }
 }

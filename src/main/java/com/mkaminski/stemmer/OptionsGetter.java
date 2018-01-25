@@ -5,9 +5,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 
+import com.mkaminski.stemmer.KaminskiStemmerRunner.FailureException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -97,9 +99,7 @@ public class OptionsGetter {
         try {
             cmd = parser.parse(options, args);
         } catch (ParseException pe) {
-            System.err.println(pe.getMessage());
-            System.exit(1);
-            return new FailedRunOptions();
+            throw new FailureException(pe);
         }
         return OptionCommand.mapToRunOptions(cmd);
     }

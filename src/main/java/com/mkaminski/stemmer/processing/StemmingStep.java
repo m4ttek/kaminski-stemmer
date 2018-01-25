@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
-import com.sun.deploy.util.StringUtils;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 
 /**
@@ -18,6 +17,9 @@ public class StemmingStep implements ProcessStep {
     public void makeProcess(ProcessingContext processingContext) {
         PatriciaTrie<String> dictionary = (PatriciaTrie<String>) processingContext.getDictionary();
         Scanner scanner = processingContext.getFileScanner();
+        if (scanner == null || dictionary == null) {
+            return;
+        }
         try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(processingContext.getDest())) {
             while (scanner.hasNext()) {
                 String token = scanner.next();
@@ -31,7 +33,10 @@ public class StemmingStep implements ProcessStep {
     }
 
     private String stemStringToken(PatriciaTrie<String> dictionary, String token) {
-        String trimmedToken = StringUtils.trimWhitespace(token);
+        if (token == null) {
+            return "";
+        }
+        String trimmedToken = token.trim();
         if (dictionary.containsKey(trimmedToken)) {
             return dictionary.get(trimmedToken);
         }
