@@ -36,17 +36,18 @@ public class StemmingStep implements ProcessStep {
         if (token == null) {
             return "";
         }
-        String trimmedToken = token.trim();
+        String trimmedToken = token.trim().replaceAll("\\p{Punct}", "");
         if (dictionary.containsKey(trimmedToken)) {
             return dictionary.get(trimmedToken);
         }
         if (trimmedToken.length() < 2) {
             return trimmedToken;
         }
+
         if (dictionary.containsKey(trimmedToken.toLowerCase())) {
             return dictionary.get(trimmedToken.toLowerCase());
         }
-        return stemStringToken(dictionary, trimmedToken.substring(0, trimmedToken.length() - 1));
+        return trimmedToken;
     }
 
     @Override

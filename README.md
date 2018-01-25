@@ -9,19 +9,19 @@ Styczeń 2018.
 
 ### Opis
 
-Kaminski-stemmer to aplikacja -  jednocześnie biblioteka - pełniąca rolę procesora tekstowego.
+Kaminski-stemmer to aplikacja - biblioteka pełniąca rolę procesora tekstowego.
 Jej zadaniem jest stemming dowolnego tekstu dla języka obsługiwanego przez specjalnie 
 przygotowany słownik zawierający reguły stemujące. 
 Stemmer przeprowadza normalizację pewnego tekstu do tekstu wynikowego składającego się ze słów 
 \- nazywanych termami - sprowadzonych do prostej formy (np. dla czasownika będzie to forma bezokolicznika).
 
-Domyślnie, kaminski-stemmer wykorzystuje odpowiednio przygotowany słownik morfologiczny języka polskiego 
+Domyślnie, kaminski-stemmer posługuje się odpowiednio przygotowanym słownikiem morfologicznym języka polskiego 
 o nazwie PoliMorf 
 http://zil.ipipan.waw.pl/PoliMorf 
 (połączenie SGJP + Morfologik).
 
-Stemmer może być używany jako niezależna aplikacja lub wchodzić w skład istniejących aplikacji, które powstały
-w językach bazujących na wirtualnej maszynie javy.
+Kaminski-stemmer może być używany jako niezależna aplikacja lub wchodzić w skład istniejących aplikacji, 
+które powstaływ językach bazujących na wirtualnej maszynie javy.
 Dla maksymalnej wydajności przetwarzania zalecana jest druga opcja, gdzie aplikacja utrzymuje w pamięci
 strukturę danych wymaganą do działania procesu stemmingu i może być wykorzystywana wielokrotnie.
 
@@ -29,6 +29,7 @@ Aplikacja kaminski-stemmer udostępnia mechanizm konwersji słownika w dowolnym 
 używaną przez stemmera. Kaminski-stemmer może być z powodzeniem wykorzystywany w systemach wykorzystujących Natural Language Processing (NLP),
 czyli w systemach przetwarzających tekst naturalny.
 
+Modularność stemmera pozwala na dostosowanie procesu stemmingu do własnych potrzeb.
 
 #### Charakterystyka
 
@@ -66,14 +67,80 @@ http://github.com/morfologik/morfologik-stemming/wiki .
 
 | Nazwa  źródła                 | kaminski-stemmer czas wykonywania | kaminski-stemmer ilość różnych słów | morfologik czas wykonywania  | morfologik ilość różnych słów |
 | ----------------------------- | :-------------------------------: | :---------------------------------: | :--------------------------: | :---------------------------: |
-| zbikowski-doktorat            | 98 ms  | 1979  | 292 ms | 4708  |
-| pan_tadeusz                   | 236 ms | 9152  | 331 ms | 13520 |
-| tadeusz-micinski-nauczycielka | 25 ms  | 3608  | 38 ms  | 4377  |
-| sztuka-zdobywania-pieniedzy   | 8 ms   | 1198  | 10 ms  | 1428  |
-| ogniem-i-mieczem              | 355 ms | 13002 | 529 ms | 20394 |
+| zbikowski-doktorat            | 122 ms | 4932  | 292 ms | 4708  |
+| pan_tadeusz                   | 145 ms | 10811 | 374 ms | 13520 |
+| tadeusz-micinski-nauczycielka | 25 ms  | 3608  | 42 ms  | 4377  |
+| sztuka-zdobywania-pieniedzy   | 7 ms   | 1306  | 17 ms  | 1428  |
+| ogniem-i-mieczem              | 346 ms | 17490 | 540 ms | 20394 |
 
-Kaminski-stemmer działa wyraźnie szybciej od morfologika i produkuje tekst wynikowy składający 
+Krótki opis źródeł:
+1. zbikowski-doktorat - rozprawa doktorska Pana Kamila Żbikowskiego na temat
+"Konstrukcja funkcji kary dla klasyfikatorów SVM w automatycznych strategiach inwestycyjnych";
+charakteryzuje się wyspecjalizowanym słownictwem naukowym z dziedziny informatyki. 
+127 stron tekstu może być sporym wyzwaniem dla stemmera.
+2. pan_tadeusz - znana wszystkim epopeja narodowa, cechuje się staromodnym i trudnym językiem poetyckim.
+3. tadeusz-micinski-nauczycielka - proza jednego z czołowych pisarzy polskiego ekspresjonizmu, 
+prekursora surrealizmu, z trudnym ale współczesnym językiem
+4. sztuka-zdobywania-pieniedzy - poradnik pisany przystępnym, współczesnym językiem. 
+Objętościowo kilkanaście stron.
+5. ogniem-i-mieczem - utwór pisany prozą, język staromodny, ok. 430 stron.
+
+
+Kaminski-stemmer działa wyraźnie szybciej od morfologika i zazwyczaj produkuje tekst wynikowy składający 
 się z mniejszej ilości różnych słów.
+
+#### Przykłady
+* *Nauczycielka - Tadeusz Miciński*
+
+Oryginał:
+>Otóż jestem na pensji.
+>Zaczynam od zapisania swych wrażeń, aby siłę ich
+>rozproszyć przez refleksję... Uczuciom swoim chcę dać
+>reprezentację, aby nagłym wybuchem rewolucji nie
+>zaskoczyły mnie znienacka.
+>Chodźcie, chodźcie moje smutki, tęsknoty,
+>nieokreślone marzenia — do tego niewodu, w którym
+>pośniecie. Taki los ryb i wszystkiego, co żyje. Więc i ta
+>śmieszna potrzeba, która wychodzi z serca blada, tęskna
+>jak Goplana i chwyta się pierwszego sznura żurawi —
+
+Tekst poddany stemmingowi:
+> otóż być na pensja zaczynać od zapisać swój wrażenie aby siła on rozproszyć przez refleksja uczucie swój chcieć dać reprezentacja aby nagły wybuch rewolucja on zaskoczyć miąć znienacka chodzić chodzić mój smutki tęsknota określić marzyć — do to niewód w który posnąć taki los ryba i wszystko co żyć więc i ten śmieszny potrzeba który wychodzić z serce blady tęskny jaka goplana i chwytać się pierwszy sznura żurawi — zginąć muszy
+
+* *Ogniem i mieczem*
+
+Oryginał:
+>Rok 1647 był to dziwny rok, w którym rozmaite znaki na niebie i ziemi zwiastowały jakoweś klęski i nadzwyczajne zdarzenia.
+Współcześni kronikarze wspominają, iż z wiosny szarańcza w niesłychanej
+ilości wyroiła się z Dzikich Pól i zniszczyła zasiewy i trawy, co było przepowiednią napadów tatarskich. Latem zdarzyło się wielkie zaćmienie słońca, a wkrótce
+potem kometa pojawiła się na niebie. W Warszawie widywano też nad miastem
+mogiłę i krzyż ognisty w obłokach; odprawiano więc posty i dawano jałmużny, gdyż niektórzy twierdzili, że zaraza spadnie na kraj i wygubi rodzaj ludzki.
+Nareszcie zima nastała tak lekka, że najstarsi ludzie nie pamiętali podobnej.
+
+Tekst poddany stemmingowi:
+>rok 1647 być to dziwny rok w który rozmaity znak na niebo i ziemia zwiastować jakowyś klęska i nadzwyczajny zdarzyć współczesny kronikarz wspominać iż z wiosna szarańcza w słychać ilość wyroić się z dziki pole i zniszczyć zasiew i trawa co były przepowiednia napad tatarski lato zdarzyć się wielki zaćmienie słońce a wkrótce potem kometa pojawić się na niebo W Warszawa widywać też nad miasto mogiła i krzyż ognisty w obłoki odprawiać więc posta i dawać jałmużna gdyż niektóry twierdzić że zaraza spaść na krajać i wygubić rodzaj ludzki nareszcie zimać nastały taka lekki że stary ludzie on pamiętać podobny 
+
+* *Rozprawa doktorska Pana Kamila Żbikowskiego*
+
+Oryginał:
+>Handel algorytmiczny jest relatywnie młoda˛ dziedzina.˛ Pod wzgl˛edem różnorodności źródeł
+ wiedzy, na których bazuja˛ metody wykorzystywane przy tworzeniu automatycznych strategii
+ inwestycyjnych dziedzina ta nie ust˛epuje tak zaawansowanym zagadnieniom jak loty
+ kosmiczne. W ramach szerokiego spektrum prac badawczych wykorzystywana jest nie tylko
+ ekonomia i finanse ale również fizyka, statystyka, teoria optymalizacji, uczenie maszynowe,
+ sztuczna inteligencja, filozofia czy socjologia. Badanie istotności wyników musi odbywać
+ si˛e z niezwykła˛ precyzja˛ i dbałościa˛ o zachowanie właściwego metodologicznie podejścia
+ w zakresie testowania strategii. Nie jest bowiem sztuka˛ dopasowanie algorytmu do
+ danych z przeszłości.
+
+Tekst poddany stemmingowi:
+>handel algorytmiczny być relatywnie młody dziedzina pod w r z wiedza na który bazować metoda wykorzystywać przy tworzyć automatyczny strategia inwestycyjny dziedzina ten on usta taka zaawansowany zagadnienie jaka lot kosmiczny W ramy szeroki spektrum prace badawczy wykorzystywać być on tylko ekonomia i finanse ale równie fizyka statystyka teoria optymalizacja uczyć maszynowy sztuczny inteligencja filozofia czy socjologia badanie istotny wynik muszy odbywać si z niezwykły precyzja i dbały o zachowanie w metodologicznie pod w zakres testować strategia on być bowiem sztuka dopasować algorytm do dany z przeszły 
+
+Do konwersji formatu pdf do formatu tekstowego wykorzystano oprogramowanie `pdftotext`
+https://linux.die.net/man/1/pdftotext
+.
+Na powyższych przykładach można zauważyć, że konwersja formatu może być skomplikowanym procesem
+i rzutować na właściwe i oczekiwane zachowanie stemmera.
 
 ### Uruchomienie
 
@@ -124,11 +191,11 @@ $ ./runner.sh -stem -dict ./dict.ser -source ./example -dest ./stemmed-example
 
 #### Wydajność wczytywania słownika
 
-Mimo usilnych starań wyeliminowania tego problemu, wczytanie ogromnego słownika z formy serializowalnej 
+Mimo usilnych starań wyeliminowania problemu, wczytanie ogromnego słownika z formy poddanej serializacji bajtowej 
 (ok. 122MB dla języka polskiego) do obiektu w pamięci maszyny wirtualnej jest czasochłonnym zadaniem 
 dla komputerów klasy PC. Stąd dla maksymalnej wydajności rekomenduje się wykorzystanie kaminski-stemmer
 jako biblioteki, gdzie obiekt słownika może zostać wczytany do pamięci jednokrotnie i wykorzystywany
-przez wielu "klientów".
+wielokrotnie przez wielu "klientów".
 
 #### Pluginy do systemów Information Retrieval - silniki Apache Solr i Elasticsearch
 Silniki Apache Solr jak i Elasticsearch są otwarte na zewnętrzne narzędzia. Ich API wymaga implementacji
